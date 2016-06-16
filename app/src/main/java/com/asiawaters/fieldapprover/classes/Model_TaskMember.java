@@ -134,5 +134,4 @@ public class Model_TaskMember {
                 ", mTaskListFields=" + Arrays.toString(mTaskListFields) +
                 '}';
     }
-
 }

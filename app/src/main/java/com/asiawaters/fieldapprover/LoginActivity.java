@@ -40,10 +40,10 @@ public class LoginActivity extends AppCompatActivity {
 
     // UI references.
     private EditText mPasswordView;
-
-    private NetListener mnetListener = new NetListener();
-    private Model_NetState model_netState = new Model_NetState();
     private Button mEmailSignInButton;
+    private Model_NetState model_netState;
+    private NetListener mnetListener;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,22 +71,22 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        model_netState.setConnected(Network_Helper.isOnline(this));
-        model_netState.setOnline(Network_Helper.isConnectedbyPing(""));
-        model_netState.setContext(this);
-        model_netState.setUrl("");
+        model_netState = ((FieldApprover) getApplication()).getModel_netState();
+        mnetListener = ((FieldApprover) getApplication()).getMnetListener();
 
     }
+
     @Override
-    public void onStart(){
+    public void onStart() {
         super.onStart();
         RunStatListener();
     }
+
     @Override
     public void onResume() {
         super.onResume();
         person = ((com.asiawaters.fieldapprover.FieldApprover) this.getApplication()).getPerson();
-        if (person!=null) startNextActivity();
+        if (person != null) startNextActivity();
     }
 
     public void startNextActivity() {
@@ -125,14 +125,10 @@ public class LoginActivity extends AppCompatActivity {
 
 
     public void RunStatListener() {
-        if (mnetListener.getStatus() != AsyncTask.Status.RUNNING) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-                mnetListener.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, model_netState, model_netState);
-                new CheckTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-            } else {
-                mnetListener.execute(model_netState, model_netState);
-                new LoginTask().execute();
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            new CheckTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        } else {
+            new CheckTask().execute();
         }
     }
 

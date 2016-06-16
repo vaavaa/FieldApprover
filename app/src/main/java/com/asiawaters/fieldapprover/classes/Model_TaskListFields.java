@@ -4,6 +4,14 @@ public class Model_TaskListFields {
     private String key;
     private String value;
 
+    @Override
+    public String toString() {
+        return "Model_TaskListFields{" +
+                "key='" + key + '\'' +
+                ", value='" + value + '\'' +
+                '}';
+    }
+
     public String getKey() {
         return key;
     }

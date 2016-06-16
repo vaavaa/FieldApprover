@@ -95,23 +95,23 @@ public class MainActivity extends AppCompatActivity {
         SearchManager searchManager = (SearchManager)
                 getSystemService(Context.SEARCH_SERVICE);
         MenuItem searchMenuItem = menu.findItem(R.id.search);
-        SearchView searchView = (SearchView) searchMenuItem.getActionView();
+       // SearchView searchView = (SearchView) searchMenuItem.getActionView();
 
-        searchView.setSearchableInfo(searchManager.
-                getSearchableInfo(getComponentName()));
-        searchView.setSubmitButtonEnabled(true);
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                ia.getFilter().filter(newText);
-                return true;
-            }
-        });
+       // searchView.setSearchableInfo(searchManager.
+        //        getSearchableInfo(getComponentName()));
+       // searchView.setSubmitButtonEnabled(true);
+       // searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+//            @Override
+//            public boolean onQueryTextSubmit(String query) {
+//                return false;
+//            }
+//
+//            @Override
+//            public boolean onQueryTextChange(String newText) {
+//                ia.getFilter().filter(newText);
+//                return true;
+//            }
+//        });
         return true;
     }
 
