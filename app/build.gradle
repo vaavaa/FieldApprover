@@ -29,4 +29,6 @@ dependencies {
     compile 'com.android.support:design:23.4.0'
     compile 'com.intuit.sdp:sdp-android:1.0.3'
     compile 'com.google.code.ksoap2-android:ksoap2-android:3.6.1'
+    compile 'com.google.android.gms:play-services-appindexing:8.1.0'
+    compile 'de.codecrafters.tableview:tableview:2.1.0'
 }

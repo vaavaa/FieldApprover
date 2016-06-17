@@ -1,9 +1,9 @@
 package com.asiawaters.fieldapprover;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 
 import android.os.AsyncTask;
 
@@ -22,7 +22,6 @@ import android.widget.Toast;
 import com.asiawaters.fieldapprover.classes.Model_NetState;
 import com.asiawaters.fieldapprover.classes.Model_Person;
 import com.asiawaters.fieldapprover.classes.NetListener;
-import com.asiawaters.fieldapprover.classes.Network_Helper;
 
 import org.ksoap2.HeaderProperty;
 import org.ksoap2.SoapEnvelope;
@@ -34,7 +33,7 @@ import java.net.SocketException;
 import java.util.ArrayList;
 
 
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends Activity {
 
     private Model_Person person = null;
 
@@ -73,21 +72,9 @@ public class LoginActivity extends AppCompatActivity {
 
         model_netState = ((FieldApprover) getApplication()).getModel_netState();
         mnetListener = ((FieldApprover) getApplication()).getMnetListener();
-
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
         RunStatListener();
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        person = ((com.asiawaters.fieldapprover.FieldApprover) this.getApplication()).getPerson();
-        if (person != null) startNextActivity();
-    }
 
     public void startNextActivity() {
         this.finish();
@@ -194,10 +181,8 @@ public class LoginActivity extends AppCompatActivity {
         private final ProgressDialog dialog = new ProgressDialog(LoginActivity.this);
 
         protected void onPreExecute() {
-
             this.dialog.setMessage(getBaseContext().getResources().getString(R.string.LoggingIn));
             this.dialog.show();
-
         }
 
         protected Boolean doInBackground(final Void... unused) {
@@ -231,7 +216,7 @@ public class LoginActivity extends AppCompatActivity {
         protected Boolean doInBackground(final Void... unused) {
             do {
                 try {
-                    Thread.sleep(5000);
+                    Thread.sleep(2000);
                     publishProgress();
                 } catch (InterruptedException Ex) {
                 }

@@ -1,7 +1,6 @@
 package com.asiawaters.fieldapprover;
 
 import android.app.Dialog;
-import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.Context;
@@ -9,10 +8,7 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,16 +16,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
-import android.view.animation.TranslateAnimation;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.asiawaters.fieldapprover.classes.Model_ListMembers;
 import com.asiawaters.fieldapprover.classes.Model_Person;
@@ -39,8 +32,7 @@ import org.ksoap2.SoapEnvelope;
 import org.ksoap2.serialization.SoapObject;
 import org.ksoap2.serialization.SoapSerializationEnvelope;
 import org.ksoap2.transport.HttpTransportSE;
-
-import java.lang.reflect.Array;
+;
 import java.net.SocketException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -48,8 +40,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private Model_Person mp;
@@ -75,8 +65,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
+        lst = ((com.asiawaters.fieldapprover.FieldApprover) this.getApplication()).getList_values() ;
         new LoginTask().execute();
+
+
         selection = (TextView) findViewById(R.id.selection);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -95,12 +87,12 @@ public class MainActivity extends AppCompatActivity {
         SearchManager searchManager = (SearchManager)
                 getSystemService(Context.SEARCH_SERVICE);
         MenuItem searchMenuItem = menu.findItem(R.id.search);
-       // SearchView searchView = (SearchView) searchMenuItem.getActionView();
+        // SearchView searchView = (SearchView) searchMenuItem.getActionView();
 
-       // searchView.setSearchableInfo(searchManager.
+        // searchView.setSearchableInfo(searchManager.
         //        getSearchableInfo(getComponentName()));
-       // searchView.setSubmitButtonEnabled(true);
-       // searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        // searchView.setSubmitButtonEnabled(true);
+        // searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 //            @Override
 //            public boolean onQueryTextSubmit(String query) {
 //                return false;
@@ -145,27 +137,26 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void sortList(int order){
+    public void sortList(int order) {
         Collections.sort(Arrays.asList(lst), new Sorter(order));
         ia.notifyDataSetChanged();
     }
 
     static class Sorter implements Comparator<Model_ListMembers> {
-        int order=-1;
+        int order = -1;
 
-        Sorter(int order){
-            this.order=order;
+        Sorter(int order) {
+            this.order = order;
         }
 
-        public int compare(Model_ListMembers ob1,Model_ListMembers ob2){
-            int result =0;
-            if (order>0) result=Boolean.compare(ob2.isActive(),ob1.isActive());
-            else result=Boolean.compare(ob1.isActive(),ob2.isActive());
+        public int compare(Model_ListMembers ob1, Model_ListMembers ob2) {
+            int result = 0;
+            if (order > 0) result = Boolean.compare(ob2.isActive(), ob1.isActive());
+            else result = Boolean.compare(ob1.isActive(), ob2.isActive());
             return result;
         }
 
     }
-
 
 
     @Override
@@ -317,9 +308,12 @@ public class MainActivity extends AppCompatActivity {
 
             if (this.dialog.isShowing()) {
                 this.dialog.dismiss();
-                ia = new IconicAdapter(lst);
-                sortList(1);
-                listView.setAdapter(ia);
+                if (lst != null) {
+                    ((com.asiawaters.fieldapprover.FieldApprover) getApplication()).setList_values(lst);
+                    ia = new IconicAdapter(lst);
+                    sortList(1);
+                    listView.setAdapter(ia);
+                }
             }
         }
 
@@ -360,9 +354,9 @@ public class MainActivity extends AppCompatActivity {
             }
 
             SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy' 'HH:mm");
-            viewHolder.firstLine.setText(lst[position].getTaskName()+ " " + "#"+lst[position].getNumberOfTask());
-            viewHolder.secondLine.setText("Date: " + sdf.format(lst[position].getAppointmentDateOfTask())+
-                    "  Upto: "+sdf.format(lst[position].getTargetDatesForTheTask()));
+            viewHolder.firstLine.setText(lst[position].getTaskName() + " " + "#" + lst[position].getNumberOfTask());
+            viewHolder.secondLine.setText("Date: " + sdf.format(lst[position].getAppointmentDateOfTask()) +
+                    "  Upto: " + sdf.format(lst[position].getTargetDatesForTheTask()));
             viewHolder.icon.setImageResource(R.drawable.ic_action_pospone);
             if (lst[position].isActive()) viewHolder.firstLine.setTypeface(null, Typeface.BOLD);
             else viewHolder.firstLine.setTypeface(null, Typeface.NORMAL);

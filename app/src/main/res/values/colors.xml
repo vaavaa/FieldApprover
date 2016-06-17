@@ -7,6 +7,5 @@
     <color name="button_active">#8BC34A</color>
     <color name="button_nolink">#FFEB3B</color>
     <color name = "transparent">#00000000</color>
-
-
+    <color name="white">#FFFFFF</color>
 </resources>
