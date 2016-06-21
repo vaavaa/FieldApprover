@@ -33,5 +33,10 @@
     <string name="sort0">Asc final date</string>
     <string name="sort01">Desc final date</string>
 
+    <string name="approve">Approve</string>
+    <string name="decline">Decline</string>
+    <string name="improve">Improve</string>
+
+    <string name="addcomment">Add comment</string>
 
 </resources>

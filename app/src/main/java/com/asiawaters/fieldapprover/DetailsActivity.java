@@ -5,20 +5,19 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TableRow;
 import android.widget.TextView;
 
+import com.asiawaters.fieldapprover.classes.KeyValueTableDataAdapter;
 import com.asiawaters.fieldapprover.classes.Model_ListMembers;
 import com.asiawaters.fieldapprover.classes.Model_TaskListFields;
 import com.asiawaters.fieldapprover.classes.Model_TaskMember;
-import com.asiawaters.fieldapprover.classes.Utility;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -34,21 +33,17 @@ import java.net.SocketException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+
+import de.codecrafters.tableview.TableView;
+import de.codecrafters.tableview.toolkit.SimpleTableDataAdapter;
+import de.codecrafters.tableview.toolkit.SimpleTableHeaderAdapter;
 
 public class DetailsActivity extends AppCompatActivity {
     Model_ListMembers mlm;
     Model_TaskMember taskMembers;
-
-    private ListView mListView1, mListView2;
-
-    private String[] data1 = {"Hiren", "Pratik", "Dhruv", "Narendra", "Piyush", "Priyank","Priyank","Priyank","Priyank","Priyank","Priyank","Priyank","Priyank","Priyank","Priyank","Priyank","Priyank","Priyank"};
-    private String[] data2 = {"Kirit", "Miral", "Bhushan", "Jiten", "Ajay", "Kamlesh"};
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    private GoogleApiClient client;
-
+    TableView tableView;
+    private static final String[] DATA_TO_SHOW = {"Название поля", "Значение поля"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,14 +60,50 @@ public class DetailsActivity extends AppCompatActivity {
             }
         });
 
+        tableView = (TableView) findViewById(R.id.tableView);
+        tableView.setColumnCount(2);
+        tableView.setColumnWeight(1, 2);
+        tableView.setHeaderAdapter(new SimpleTableHeaderAdapter(getBaseContext(), DATA_TO_SHOW));
+
+
+        // Capture our button from layout
+        Button ok_btn = (Button) findViewById(R.id.ok_btn);
+        Button cancel_btn = (Button) findViewById(R.id.cancel_btn);
+        Button cancel_coment_btn = (Button) findViewById(R.id.cancel_coment_btn);
+        // Register the onClick listener with the implementation above
+        ok_btn.setOnClickListener(mStatListener);
+        cancel_btn.setOnClickListener(mStatListener);
+        cancel_coment_btn.setOnClickListener(mStatListener);
+
+
         mlm = ((FieldApprover) this.getApplication()).getListMember();
         new LoginTask().execute();
-
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
+
+    // Create an anonymous implementation of OnClickListener
+    private View.OnClickListener mStatListener = new View.OnClickListener() {
+        public void onClick(View v) {
+            switch (v.getId()) {
+                case R.id.ok_btn:
+
+
+                    break;
+                case R.id.cancel_btn:
+
+
+
+                    break;
+                case R.id.cancel_coment_btn:
+
+
+
+                    break;
+                default:
+                    break;
+            }
+
+        }
+    };
 
     private boolean doLogin(String user_id, String password) {
 
@@ -137,7 +168,7 @@ public class DetailsActivity extends AppCompatActivity {
 
     public static Model_TaskMember RetrieveFromSoap(SoapObject soap) {
         int ii = 0;
-        SimpleDateFormat date_format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        SimpleDateFormat date_format = new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss");
         Model_TaskMember[] tms = new Model_TaskMember[soap.getPropertyCount()];
         Model_TaskMember taskMembers = new Model_TaskMember();
         String Vle = "";
@@ -217,46 +248,6 @@ public class DetailsActivity extends AppCompatActivity {
         return taskMembers;
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client.connect();
-        Action viewAction = Action.newAction(
-                Action.TYPE_VIEW, // TODO: choose an action type.
-                "Details Page", // TODO: Define a title for the content shown.
-                // TODO: If you have web page content that matches this app activity's content,
-                // make sure this auto-generated web page URL is correct.
-                // Otherwise, set the URL to null.
-                Uri.parse("http://host/path"),
-                // TODO: Make sure this auto-generated app URL is correct.
-                Uri.parse("android-app://com.asiawaters.fieldapprover/http/host/path")
-        );
-        AppIndex.AppIndexApi.start(client, viewAction);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        Action viewAction = Action.newAction(
-                Action.TYPE_VIEW, // TODO: choose an action type.
-                "Details Page", // TODO: Define a title for the content shown.
-                // TODO: If you have web page content that matches this app activity's content,
-                // make sure this auto-generated web page URL is correct.
-                // Otherwise, set the URL to null.
-                Uri.parse("http://host/path"),
-                // TODO: Make sure this auto-generated app URL is correct.
-                Uri.parse("android-app://com.asiawaters.fieldapprover/http/host/path")
-        );
-        AppIndex.AppIndexApi.end(client, viewAction);
-        client.disconnect();
-    }
-
 
     private class LoginTask extends AsyncTask<Void, Void, Void> {
 
@@ -281,17 +272,89 @@ public class DetailsActivity extends AppCompatActivity {
 
 
         protected void onPostExecute(Void result) {
-
-
             if (this.dialog.isShowing()) {
                 this.dialog.dismiss();
-                TextView txt = (TextView) findViewById(R.id.DetailedText);
                 if (taskMembers != null) {
-                    txt.setText(taskMembers.toString());
-                } else txt.setText("Empty Object");
-                txt.invalidate();
+                    if (taskMembers.getmTaskListFields() != null) {
+                        fillCommoninfo();
+                        tableView.setDataAdapter(new KeyValueTableDataAdapter(getBaseContext(), Arrays.asList(taskMembers.getmTaskListFields())));
+                    }
+                }
             }
         }
+
+    }
+
+    public void fillCommoninfo() {
+
+        TextView tv;
+        SimpleDateFormat date_format = new SimpleDateFormat("dd-MM-yyyy' T 'HH:mm:ss");
+
+        tv = (TextView) findViewById(R.id.TxtName1);
+        tv.setText("Директор");
+
+        tv = (TextView) findViewById(R.id.TxtVle1);
+        tv.setText(taskMembers.getDirector());
+
+        tv = (TextView) findViewById(R.id.TxtName2);
+        tv.setText("Инициатор");
+
+        tv = (TextView) findViewById(R.id.TxtVle2);
+        tv.setText(taskMembers.getInitiatorBP());
+
+        tv = (TextView) findViewById(R.id.TxtName3);
+        tv.setText("Событие");
+
+        tv = (TextView) findViewById(R.id.TxtVle3);
+        tv.setText(taskMembers.getEvent());
+
+        tv = (TextView) findViewById(R.id.TxtName4);
+        tv.setText("События");
+
+        tv = (TextView) findViewById(R.id.TxtVle4);
+        tv.setText(taskMembers.getEvents());
+
+        tv = (TextView) findViewById(R.id.TxtName5);
+        tv.setText("Дата план");
+
+        tv = (TextView) findViewById(R.id.TxtVle5);
+        tv.setText(date_format.format(taskMembers.getDateOfExecutionPlan()));
+
+        tv = (TextView) findViewById(R.id.TxtName6);
+        tv.setText("Дата факт");
+
+        tv = (TextView) findViewById(R.id.TxtVle6);
+        tv.setText(date_format.format(taskMembers.getDateOfExecutionFact()));
+
+        tv = (TextView) findViewById(R.id.TxtName7);
+        tv.setText("Дата к выполнению план");
+
+        tv = (TextView) findViewById(R.id.TxtVle7);
+        tv.setText(date_format.format(taskMembers.getDateOfCommencementFact()));
+
+        tv = (TextView) findViewById(R.id.TxtName8);
+        tv.setText("Дата к выполнению факт");
+
+        tv = (TextView) findViewById(R.id.TxtVle8);
+        tv.setText(date_format.format(taskMembers.getDateOfCommencementFact()));
+
+        tv = (TextView) findViewById(R.id.TxtName9);
+        tv.setText("Комментарий");
+
+        tv = (TextView) findViewById(R.id.TxtVle9);
+        tv.setText(taskMembers.getmComment());
+
+        tv = (TextView) findViewById(R.id.TxtName10);
+        tv.setText("Cтатус задачи");
+
+        tv = (TextView) findViewById(R.id.TxtVle10);
+        tv.setText(taskMembers.getStatus());
+
+        tv = (TextView) findViewById(R.id.TxtName11);
+        tv.setText("Cостояние задачи");
+
+        tv = (TextView) findViewById(R.id.TxtVle11);
+        tv.setText(taskMembers.getStateTask());
 
     }
 
