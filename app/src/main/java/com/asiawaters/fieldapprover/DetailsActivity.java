@@ -5,14 +5,20 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.asiawaters.fieldapprover.classes.KeyValueTableDataAdapter;
 import com.asiawaters.fieldapprover.classes.Model_ListMembers;
@@ -35,6 +41,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import de.codecrafters.tableview.TableDataAdapter;
 import de.codecrafters.tableview.TableView;
 import de.codecrafters.tableview.toolkit.SimpleTableDataAdapter;
 import de.codecrafters.tableview.toolkit.SimpleTableHeaderAdapter;
@@ -43,12 +50,20 @@ public class DetailsActivity extends AppCompatActivity {
     Model_ListMembers mlm;
     Model_TaskMember taskMembers;
     TableView tableView;
-    private static final String[] DATA_TO_SHOW = {"Название поля", "Значение поля"};
+    private final String[] DATA_TO_SHOW={"",""};
+    private String WDSLPath;
+    String[] items = new String[]{""};
+    Spinner dropdown;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_details);
+        DATA_TO_SHOW[0] = getBaseContext().getResources().getString(R.string.TitleColumn1);
+        DATA_TO_SHOW[1] = getBaseContext().getResources().getString(R.string.TitleColumn2);
+
+        WDSLPath = ((com.asiawaters.fieldapprover.FieldApprover) this.getApplication()).getPath_url();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -66,14 +81,10 @@ public class DetailsActivity extends AppCompatActivity {
         tableView.setHeaderAdapter(new SimpleTableHeaderAdapter(getBaseContext(), DATA_TO_SHOW));
 
 
-        // Capture our button from layout
         Button ok_btn = (Button) findViewById(R.id.ok_btn);
-        Button cancel_btn = (Button) findViewById(R.id.cancel_btn);
-        Button cancel_coment_btn = (Button) findViewById(R.id.cancel_coment_btn);
-        // Register the onClick listener with the implementation above
         ok_btn.setOnClickListener(mStatListener);
-        cancel_btn.setOnClickListener(mStatListener);
-        cancel_coment_btn.setOnClickListener(mStatListener);
+
+        dropdown = (Spinner) findViewById(R.id.spinner1);
 
 
         mlm = ((FieldApprover) this.getApplication()).getListMember();
@@ -85,18 +96,10 @@ public class DetailsActivity extends AppCompatActivity {
         public void onClick(View v) {
             switch (v.getId()) {
                 case R.id.ok_btn:
-
-
-                    break;
-                case R.id.cancel_btn:
-
-
-
-                    break;
-                case R.id.cancel_coment_btn:
-
-
-
+                    if (!dropdown.getItemAtPosition(dropdown.getSelectedItemPosition()).toString().equals("")) {
+                        doAction("", "");
+                        Toast.makeText(DetailsActivity.this, R.string.Done, Toast.LENGTH_SHORT).show();
+                    }
                     break;
                 default:
                     break;
@@ -108,13 +111,71 @@ public class DetailsActivity extends AppCompatActivity {
     private boolean doLogin(String user_id, String password) {
 
         String NAMESPACE = "Mobile";
-        String URL = "http://193.193.245.125:3108/ast2/ws/Mobile";
+        String URL = WDSLPath;
 
         boolean result = false;
         final String SOAP_ACTION = "Mobile/MobilePortType/GetStatusRequest";
         final String METHOD_NAME = "GetTask";
         SoapObject request = new SoapObject(NAMESPACE, METHOD_NAME);
         request.addProperty("GUIDTask", mlm.getGuidTask());
+
+        SoapSerializationEnvelope envelope = new SoapSerializationEnvelope(SoapEnvelope.VER12);
+        envelope.implicitTypes = true;
+        envelope.dotNet = false;
+
+        envelope.setOutputSoapObject(request);
+        System.out.println(request);
+
+        HttpTransportSE androidHttpTransport = new HttpTransportSE(URL);
+        androidHttpTransport.debug = true;
+
+//        ArrayList headerProperty = new ArrayList();
+//        headerProperty.add(new HeaderProperty("Authorization", "Basic " +
+//                Base64.encode(("aw" + ":" + "123").getBytes())));
+
+
+        try {
+            androidHttpTransport.call(SOAP_ACTION, envelope);//, headerProperty);
+            Log.d("dump Request: ", androidHttpTransport.requestDump);
+            Log.d("dump response: ", androidHttpTransport.responseDump);
+            SoapObject response = (SoapObject) envelope.getResponse();
+            Log.i("myApp", response.toString());
+            System.out.println("response" + response);
+
+            if (response.getProperty("List").toString().length() > 0) {
+                taskMembers = RetrieveFromSoap(response);
+                result = true;
+            }
+
+        } catch (SocketException ex) {
+            Log.e("Error : ", "Error on soapPrimitiveData() " + ex.getMessage());
+            ex.printStackTrace();
+        } catch (Exception e) {
+            Log.e("Error : ", "Error on soapPrimitiveData() " + e.getMessage());
+            e.printStackTrace();
+        }
+        return result;
+
+    }
+
+    private boolean doAction(String user_id, String password) {
+
+        String NAMESPACE = "Mobile";
+        String NAMESPACE1 = "http://www.asiawaters.com/wsdl/Task";
+        String URL = WDSLPath;
+
+        boolean result = false;
+        final String SOAP_ACTION = "Mobile/MobilePortType/GetStatusRequest";
+        final String METHOD_NAME = "ChangeTask";
+        SoapObject request = new SoapObject(NAMESPACE, METHOD_NAME);
+        request.addProperty(NAMESPACE,"GUIDTask", mlm.getGuidTask());
+        request.addProperty(NAMESPACE,"Status", dropdown.getItemAtPosition(dropdown.getSelectedItemPosition()).toString());
+        request.addProperty(NAMESPACE, "ExtraOptions","");
+        SoapObject list = (SoapObject)request.addProperty(NAMESPACE1,"List","");
+        list.addProperty(NAMESPACE1,"Key","Комментарий");
+        list.addProperty(NAMESPACE1,"Value",((EditText)findViewById(R.id.comment)).getText().toString());
+        list.addProperty(NAMESPACE1,"Table","");
+        list.addProperty(NAMESPACE1,"NumberOfLine","0");
 
         SoapSerializationEnvelope envelope = new SoapSerializationEnvelope(SoapEnvelope.VER12);
         envelope.implicitTypes = true;
@@ -166,13 +227,28 @@ public class DetailsActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public static Model_TaskMember RetrieveFromSoap(SoapObject soap) {
+    public Model_TaskMember RetrieveFromSoap(SoapObject soap) {
         int ii = 0;
-        SimpleDateFormat date_format = new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss");
+        int i0 = 0;
+        SimpleDateFormat date_format = new SimpleDateFormat("yyyy-MM-dd'-'HH:mm:ss");
         Model_TaskMember[] tms = new Model_TaskMember[soap.getPropertyCount()];
         Model_TaskMember taskMembers = new Model_TaskMember();
         String Vle = "";
-        Model_TaskListFields[] tfls = new Model_TaskListFields[soap.getPropertyCount() - 11];
+        for (int i = 0; i < tms.length; i++) {
+            switch (soap.getPropertyInfo(i).getName()) {
+                case "List":
+                    ii++;
+                    break;
+                case "Events":
+                    i0++;
+                    break;
+            }
+        }
+        Model_TaskListFields[] tfls = new Model_TaskListFields[ii];
+        items = new String[i0];
+        ii = 0;
+        i0 = 0;
+
         for (int i = 0; i < tms.length; i++) {
             switch (soap.getPropertyInfo(i).getName()) {
                 case "DateOfExecutionPlan":
@@ -231,7 +307,8 @@ public class DetailsActivity extends AppCompatActivity {
                     break;
                 case "Events":
                     SoapObject l0 = (SoapObject) (soap.getProperty(i));
-                    taskMembers.setEvents((l0.getProperty(0).toString()));
+                    items[i0] = l0.getProperty(0).toString();
+                    i0++;
                     break;
                 case "List":
                     SoapObject l2 = (SoapObject) (soap.getProperty(i));
@@ -256,7 +333,7 @@ public class DetailsActivity extends AppCompatActivity {
 
         protected void onPreExecute() {
 
-            this.dialog.setMessage("Logging in...");
+            this.dialog.setMessage(getBaseContext().getResources().getString(R.string.LoggingIn));
             this.dialog.show();
 
         }
@@ -276,8 +353,11 @@ public class DetailsActivity extends AppCompatActivity {
                 this.dialog.dismiss();
                 if (taskMembers != null) {
                     if (taskMembers.getmTaskListFields() != null) {
+                        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getBaseContext(), android.R.layout.simple_spinner_dropdown_item, items);
+                        dropdown.setAdapter(adapter);
                         fillCommoninfo();
                         tableView.setDataAdapter(new KeyValueTableDataAdapter(getBaseContext(), Arrays.asList(taskMembers.getmTaskListFields())));
+                        setListViewHeightBasedOnChildren(tableView);
                     }
                 }
             }
@@ -317,27 +397,32 @@ public class DetailsActivity extends AppCompatActivity {
         tv = (TextView) findViewById(R.id.TxtName5);
         tv.setText("Дата план");
 
-        tv = (TextView) findViewById(R.id.TxtVle5);
-        tv.setText(date_format.format(taskMembers.getDateOfExecutionPlan()));
+        if (taskMembers.getDateOfExecutionPlan() != null) {
+            tv = (TextView) findViewById(R.id.TxtVle5);
+            tv.setText(date_format.format(taskMembers.getDateOfExecutionPlan()));
+        }
 
         tv = (TextView) findViewById(R.id.TxtName6);
         tv.setText("Дата факт");
-
-        tv = (TextView) findViewById(R.id.TxtVle6);
-        tv.setText(date_format.format(taskMembers.getDateOfExecutionFact()));
-
+        if (taskMembers.getDateOfExecutionFact() != null) {
+            tv = (TextView) findViewById(R.id.TxtVle6);
+            tv.setText(date_format.format(taskMembers.getDateOfExecutionFact()));
+        }
         tv = (TextView) findViewById(R.id.TxtName7);
         tv.setText("Дата к выполнению план");
 
-        tv = (TextView) findViewById(R.id.TxtVle7);
-        tv.setText(date_format.format(taskMembers.getDateOfCommencementFact()));
+        if (taskMembers.getDateOfCommencementFact() != null) {
+            tv = (TextView) findViewById(R.id.TxtVle7);
+            tv.setText(date_format.format(taskMembers.getDateOfCommencementFact()));
+        }
 
         tv = (TextView) findViewById(R.id.TxtName8);
         tv.setText("Дата к выполнению факт");
 
-        tv = (TextView) findViewById(R.id.TxtVle8);
-        tv.setText(date_format.format(taskMembers.getDateOfCommencementFact()));
-
+        if (taskMembers.getDateOfCommencementFact() != null) {
+            tv = (TextView) findViewById(R.id.TxtVle8);
+            tv.setText(date_format.format(taskMembers.getDateOfCommencementFact()));
+        }
         tv = (TextView) findViewById(R.id.TxtName9);
         tv.setText("Комментарий");
 
@@ -356,6 +441,27 @@ public class DetailsActivity extends AppCompatActivity {
         tv = (TextView) findViewById(R.id.TxtVle11);
         tv.setText(taskMembers.getStateTask());
 
+    }
+
+    public static void setListViewHeightBasedOnChildren(TableView tableView) {
+        TableDataAdapter listAdapter = tableView.getDataAdapter();
+        if (listAdapter == null) {
+            // pre-condition
+            return;
+        }
+
+        int totalHeight = 0;
+        int desiredWidth = View.MeasureSpec.makeMeasureSpec(tableView.getWidth(), View.MeasureSpec.AT_MOST);
+        for (int i = 0; i < listAdapter.getCount(); i++) {
+            View listItem = listAdapter.getView(i, null, tableView);
+            listItem.measure(desiredWidth, View.MeasureSpec.UNSPECIFIED);
+            totalHeight += listItem.getMeasuredHeight();
+        }
+
+        ViewGroup.LayoutParams params = tableView.getLayoutParams();
+        params.height = totalHeight + (tableView.getShowDividers() * (listAdapter.getCount() - 1));
+        tableView.setLayoutParams(params);
+        tableView.requestLayout();
     }
 
 

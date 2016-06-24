@@ -42,6 +42,7 @@ public class LoginActivity extends Activity {
     private Button mEmailSignInButton;
     private Model_NetState model_netState;
     private NetListener mnetListener;
+    private String WDSLPath;
 
 
     @Override
@@ -49,7 +50,7 @@ public class LoginActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         // Set up the login form.
-
+        WDSLPath = ((com.asiawaters.fieldapprover.FieldApprover) this.getApplication()).getPath_url();
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -66,7 +67,18 @@ public class LoginActivity extends Activity {
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                new LoginTask().execute();
+                if ((((TextView) findViewById(R.id.email)).getText() != null)) {
+                    if (isLoginValid(((TextView) findViewById(R.id.email)).getText().toString())) {
+                        if ((((TextView) findViewById(R.id.password)).getText() != null)) {
+                            if (isPasswordValid(((TextView) findViewById(R.id.password)).getText().toString())) {
+                                new LoginTask().execute();
+                            } else Toast.makeText(LoginActivity.this, R.string.password, Toast.LENGTH_SHORT).show();
+                        } else
+                            Toast.makeText(LoginActivity.this, R.string.password, Toast.LENGTH_SHORT).show();
+                    } else
+                        Toast.makeText(LoginActivity.this, R.string.login, Toast.LENGTH_SHORT).show();
+                } else
+                    Toast.makeText(LoginActivity.this, R.string.login, Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -100,14 +112,12 @@ public class LoginActivity extends Activity {
     }
 
 
-    private boolean isEmailValid(String email) {
-        //TODO: Replace this with your own logic
-        return email.contains("@");
+    private boolean isLoginValid(String email) {
+        return email.length() > 0;
     }
 
     private boolean isPasswordValid(String password) {
-        //TODO: Replace this with your own logic
-        return password.length() > 4;
+        return password.length() > 0;
     }
 
 
@@ -121,13 +131,12 @@ public class LoginActivity extends Activity {
 
     private boolean doLogin() {
         String NAMESPACE = "Mobile";
-        String URL = "http://193.193.245.125:3108/ast2/ws/Mobile";
 
         boolean result = false;
-        final String SOAP_ACTION = "Mobile/MobilePortType/GetStatusRequest";
+        final String SOAP_ACTION = "Mobile";
         final String METHOD_NAME = "Autorization";
         SoapObject request = new SoapObject(NAMESPACE, METHOD_NAME);
-        request.addProperty("Login", "Администратор");
+        request.addProperty("Login", "Саликов А.К.");
         SoapSerializationEnvelope envelope = new SoapSerializationEnvelope(SoapEnvelope.VER12);
         envelope.implicitTypes = true;
         envelope.dotNet = false;
@@ -135,16 +144,16 @@ public class LoginActivity extends Activity {
         envelope.setOutputSoapObject(request);
         System.out.println(request);
 
-        HttpTransportSE androidHttpTransport = new HttpTransportSE(URL);
+        HttpTransportSE androidHttpTransport = new HttpTransportSE(WDSLPath);
         androidHttpTransport.debug = true;
 
-        ArrayList headerProperty = new ArrayList();
-        headerProperty.add(new HeaderProperty("Authorization", "Basic " +
-                org.kobjects.base64.Base64.encode(("aw" + ":" + "123").getBytes())));
+//        ArrayList headerProperty = new ArrayList();
+//        headerProperty.add(new HeaderProperty("Authorization", "Basic " +
+//                org.kobjects.base64.Base64.encode(("aw" + ":" + "123").getBytes())));
 
 
         try {
-            androidHttpTransport.call(SOAP_ACTION, envelope, headerProperty);
+            androidHttpTransport.call(SOAP_ACTION, envelope);//, headerProperty);
             Log.d("dump Request: ", androidHttpTransport.requestDump);
             Log.d("dump response: ", androidHttpTransport.responseDump);
             SoapObject response = (SoapObject) envelope.getResponse();

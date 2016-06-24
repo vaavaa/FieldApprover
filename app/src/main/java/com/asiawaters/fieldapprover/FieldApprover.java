@@ -12,6 +12,8 @@ public class FieldApprover extends Application {
     private NetListener mnetListener = new NetListener();
     private Model_NetState model_netState = new Model_NetState();
     private Model_ListMembers[] list_values;
+    private String path_url ="http://88.204.157.54:8080/ast2/ws/Mobile";
+
 
     public Model_ListMembers getListMember() {
         return listMember;
@@ -42,6 +44,14 @@ public class FieldApprover extends Application {
 
     public void setModel_netState(Model_NetState model_netState) {
         this.model_netState = model_netState;
+    }
+
+    public String getPath_url() {
+        return path_url;
+    }
+
+    public void setPath_url(String path_url) {
+        this.path_url = path_url;
     }
 
     public Model_ListMembers[] getList_values() {

@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private Model_ListMembers[] lst;
     private ListView listView;
     private IconicAdapter ia;
+    private String WDSLPath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
                 closeApp();
             }
         });
+
+        WDSLPath = ((com.asiawaters.fieldapprover.FieldApprover) this.getApplication()).getPath_url();
 
         lst = ((com.asiawaters.fieldapprover.FieldApprover) this.getApplication()).getList_values() ;
         new LoginTask().execute();
@@ -196,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean doLogin(String user_id, String password, String guid) {
 
         String NAMESPACE = "Mobile";
-        String URL = "http://193.193.245.125:3108/ast2/ws/Mobile";
+        String URL = WDSLPath;
 
         boolean result = false;
         final String SOAP_ACTION = "Mobile/MobilePortType/GetStatusRequest";
@@ -216,13 +219,13 @@ public class MainActivity extends AppCompatActivity {
         HttpTransportSE androidHttpTransport = new HttpTransportSE(URL);
         androidHttpTransport.debug = true;
 
-        ArrayList headerProperty = new ArrayList();
-        headerProperty.add(new HeaderProperty("Authorization", "Basic " +
-                org.kobjects.base64.Base64.encode(("aw" + ":" + "123").getBytes())));
+//        ArrayList headerProperty = new ArrayList();
+//        headerProperty.add(new HeaderProperty("Authorization", "Basic " +
+//                org.kobjects.base64.Base64.encode(("aw" + ":" + "123").getBytes())));
 
 
         try {
-            androidHttpTransport.call(SOAP_ACTION, envelope, headerProperty);
+            androidHttpTransport.call(SOAP_ACTION, envelope); //, headerProperty);
             Log.d("dump Request: ", androidHttpTransport.requestDump);
             Log.d("dump response: ", androidHttpTransport.responseDump);
             SoapObject response = (SoapObject) envelope.getResponse();
@@ -288,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
 
         protected void onPreExecute() {
 
-            this.dialog.setMessage("Logging in...");
+            this.dialog.setMessage(getBaseContext().getResources().getString(R.string.LoggingIn));
             this.dialog.show();
 
         }

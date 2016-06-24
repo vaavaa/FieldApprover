@@ -39,4 +39,13 @@
 
     <string name="addcomment">Add comment</string>
 
+    <string name="TitleColumn1">Name</string>
+    <string name="TitleColumn2">Value</string>
+    <string name="Done">Done</string>
+    <string name="Go">Go</string>
+
+    <string name="login">Login is not valid</string>
+    <string name="password">Password is not valid</string>
+
+    <string name="search">Search</string>
 </resources>
