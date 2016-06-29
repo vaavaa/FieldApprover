@@ -50,7 +50,7 @@ public class DetailsActivity extends AppCompatActivity {
     Model_ListMembers mlm;
     Model_TaskMember taskMembers;
     TableView tableView;
-    private final String[] DATA_TO_SHOW={"",""};
+    private final String[] DATA_TO_SHOW = {"", ""};
     private String WDSLPath;
     String[] items = new String[]{""};
     Spinner dropdown;
@@ -97,8 +97,10 @@ public class DetailsActivity extends AppCompatActivity {
             switch (v.getId()) {
                 case R.id.ok_btn:
                     if (!dropdown.getItemAtPosition(dropdown.getSelectedItemPosition()).toString().equals("")) {
-                        doAction("", "");
-                        Toast.makeText(DetailsActivity.this, R.string.Done, Toast.LENGTH_SHORT).show();
+                        if (doAction("", "")) {
+                            Toast.makeText(DetailsActivity.this, R.string.Done, Toast.LENGTH_SHORT).show();
+                            LockUI(true);
+                        }
                     }
                     break;
                 default:
@@ -139,7 +141,6 @@ public class DetailsActivity extends AppCompatActivity {
             Log.d("dump Request: ", androidHttpTransport.requestDump);
             Log.d("dump response: ", androidHttpTransport.responseDump);
             SoapObject response = (SoapObject) envelope.getResponse();
-            Log.i("myApp", response.toString());
             System.out.println("response" + response);
 
             if (response.getProperty("List").toString().length() > 0) {
@@ -168,14 +169,14 @@ public class DetailsActivity extends AppCompatActivity {
         final String SOAP_ACTION = "Mobile/MobilePortType/GetStatusRequest";
         final String METHOD_NAME = "ChangeTask";
         SoapObject request = new SoapObject(NAMESPACE, METHOD_NAME);
-        request.addProperty(NAMESPACE,"GUIDTask", mlm.getGuidTask());
-        request.addProperty(NAMESPACE,"Status", dropdown.getItemAtPosition(dropdown.getSelectedItemPosition()).toString());
-        request.addProperty(NAMESPACE, "ExtraOptions","");
-        SoapObject list = (SoapObject)request.addProperty(NAMESPACE1,"List","");
-        list.addProperty(NAMESPACE1,"Key","Комментарий");
-        list.addProperty(NAMESPACE1,"Value",((EditText)findViewById(R.id.comment)).getText().toString());
-        list.addProperty(NAMESPACE1,"Table","");
-        list.addProperty(NAMESPACE1,"NumberOfLine","0");
+        request.addProperty(NAMESPACE, "GUIDTask", mlm.getGuidTask());
+        request.addProperty(NAMESPACE, "Status", dropdown.getItemAtPosition(dropdown.getSelectedItemPosition()).toString());
+        request.addProperty(NAMESPACE, "ExtraOptions", "");
+        SoapObject list = (SoapObject) request.addProperty(NAMESPACE1, "List", "");
+        list.addProperty(NAMESPACE1, "Key", "Комментарий");
+        list.addProperty(NAMESPACE1, "Value", ((EditText) findViewById(R.id.comment)).getText().toString());
+        list.addProperty(NAMESPACE1, "Table", "");
+        list.addProperty(NAMESPACE1, "NumberOfLine", "0");
 
         SoapSerializationEnvelope envelope = new SoapSerializationEnvelope(SoapEnvelope.VER12);
         envelope.implicitTypes = true;
@@ -187,13 +188,13 @@ public class DetailsActivity extends AppCompatActivity {
         HttpTransportSE androidHttpTransport = new HttpTransportSE(URL);
         androidHttpTransport.debug = true;
 
-        ArrayList headerProperty = new ArrayList();
-        headerProperty.add(new HeaderProperty("Authorization", "Basic " +
-                Base64.encode(("aw" + ":" + "123").getBytes())));
+//        ArrayList headerProperty = new ArrayList();
+//        headerProperty.add(new HeaderProperty("Authorization", "Basic " +
+//                Base64.encode(("aw" + ":" + "123").getBytes())));
 
 
         try {
-            androidHttpTransport.call(SOAP_ACTION, envelope, headerProperty);
+            androidHttpTransport.call(SOAP_ACTION, envelope); //headerProperty);
             Log.d("dump Request: ", androidHttpTransport.requestDump);
             Log.d("dump response: ", androidHttpTransport.responseDump);
             SoapObject response = (SoapObject) envelope.getResponse();
@@ -353,12 +354,13 @@ public class DetailsActivity extends AppCompatActivity {
                 this.dialog.dismiss();
                 if (taskMembers != null) {
                     if (taskMembers.getmTaskListFields() != null) {
+                        LockUI(false);
                         ArrayAdapter<String> adapter = new ArrayAdapter<String>(getBaseContext(), android.R.layout.simple_spinner_dropdown_item, items);
                         dropdown.setAdapter(adapter);
                         fillCommoninfo();
                         tableView.setDataAdapter(new KeyValueTableDataAdapter(getBaseContext(), Arrays.asList(taskMembers.getmTaskListFields())));
                         setListViewHeightBasedOnChildren(tableView);
-                    }
+                    } else LockUI(true);
                 }
             }
         }
@@ -459,9 +461,15 @@ public class DetailsActivity extends AppCompatActivity {
         }
 
         ViewGroup.LayoutParams params = tableView.getLayoutParams();
-        params.height = totalHeight + (tableView.getShowDividers() * (listAdapter.getCount() - 1));
+        params.height = totalHeight + (45 * (listAdapter.getCount() - 1));
         tableView.setLayoutParams(params);
         tableView.requestLayout();
+    }
+
+    private void LockUI(Boolean lock) {
+        findViewById(R.id.ok_btn).setEnabled(!lock);
+        findViewById(R.id.spinner1).setEnabled(!lock);
+        findViewById(R.id.comment).setEnabled(!lock);
     }
 
 

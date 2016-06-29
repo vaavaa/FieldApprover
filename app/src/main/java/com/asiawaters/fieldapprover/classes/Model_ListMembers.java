@@ -9,6 +9,24 @@ public class Model_ListMembers {
     private Date TargetDatesForTheTask;
     private String GuidTask;
     private boolean Active;
+    private String Template;
+    private boolean ActiveBP;
+
+    public boolean isActiveBP() {
+        return ActiveBP;
+    }
+
+    public void setActiveBP(boolean activeBP) {
+        ActiveBP = activeBP;
+    }
+
+    public String getTemplate() {
+        return Template;
+    }
+
+    public void setTemplate(String template) {
+        Template = template;
+    }
 
     public String getNumberOfTask() {
         return NumberOfTask;

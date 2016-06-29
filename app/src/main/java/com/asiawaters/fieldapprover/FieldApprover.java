@@ -1,6 +1,7 @@
 package com.asiawaters.fieldapprover;
 import android.app.Application;
 
+import com.asiawaters.fieldapprover.classes.DBController;
 import com.asiawaters.fieldapprover.classes.Model_ListMembers;
 import com.asiawaters.fieldapprover.classes.Model_NetState;
 import com.asiawaters.fieldapprover.classes.Model_Person;
@@ -13,7 +14,42 @@ public class FieldApprover extends Application {
     private Model_NetState model_netState = new Model_NetState();
     private Model_ListMembers[] list_values;
     private String path_url ="http://88.204.157.54:8080/ast2/ws/Mobile";
+    private DBController db;
+    private int timeOut = 30000;
+    private int idGroup=-1;
+    private int idPosition=-1;
 
+    public int getIdGroup() {
+        return idGroup;
+    }
+
+    public void setIdGroup(int idGroup) {
+        this.idGroup = idGroup;
+    }
+
+    public int getIdPosition() {
+        return idPosition;
+    }
+
+    public void setIdPosition(int idPosition) {
+        this.idPosition = idPosition;
+    }
+
+    public DBController getDb() {
+        return db;
+    }
+
+    public int getTimeOut() {
+        return timeOut;
+    }
+
+    public void setTimeOut(int timeOut) {
+        this.timeOut = timeOut;
+    }
+
+    public void setDb(DBController db) {
+        this.db = db;
+    }
 
     public Model_ListMembers getListMember() {
         return listMember;

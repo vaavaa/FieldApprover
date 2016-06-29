@@ -21,6 +21,7 @@ public class SplashActivity extends Activity {
     private Model_NetState model_netState = new Model_NetState();
     private NetListener mnetListener = new NetListener();
     private Model_Person person = null;
+    private FieldApprover FA;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -32,7 +33,7 @@ public class SplashActivity extends Activity {
         model_netState.setContext(this);
         model_netState.setUrl("");
 
-
+        FA = ((com.asiawaters.fieldapprover.FieldApprover) getApplication());
 
         mTimer = new Timer();
         mTimer.schedule(
@@ -49,12 +50,10 @@ public class SplashActivity extends Activity {
         RunStatListener();
     }
     private void stopSplash() {
-        ((FieldApprover) getApplication()).setModel_netState(model_netState);
-        ((FieldApprover) getApplication()).setMnetListener(mnetListener);
+        FA.setModel_netState(model_netState);
+        FA.setMnetListener(mnetListener);
 
-        finish();
-        Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
-        startActivity(intent);
+        startMainActivity();
     }
 
 
@@ -82,13 +81,14 @@ public class SplashActivity extends Activity {
     @Override
     public void onResume() {
         super.onResume();
-        person = ((com.asiawaters.fieldapprover.FieldApprover) this.getApplication()).getPerson();
-        if (person != null) startNextActivity();
+        startMainActivity();
     }
 
-    public void startNextActivity() {
+    public void startMainActivity() {
         this.finish();
-        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        Intent intent ;
+        if (FA.getList_values() == null) intent = new Intent(getApplicationContext(), LoginActivity.class);
+        else intent = new Intent(getApplicationContext(), MainActivity.class);
         startActivity(intent);
     }
 }

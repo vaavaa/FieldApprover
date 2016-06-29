@@ -8,4 +8,5 @@
     <color name="button_nolink">#FFEB3B</color>
     <color name = "transparent">#00000000</color>
     <color name="white">#FFFFFF</color>
+    <color name="groupcolor">#AFD3EA</color>
 </resources>

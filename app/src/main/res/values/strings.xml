@@ -19,6 +19,7 @@
     <string name="Connection_is_switched_off">Connection is switched off. Pls. switch on the connection</string>
     <string name="LoggingIn">Logging in...</string>
     <string name="ServerIsNotResponding">Server didn\'t send a respond. Try ones again.</string>
+    <string name="UserNotFind">Such user\'s name is not find.</string>
 
     <string name="dialog_text">Are you about to exit the app?</string>
     <string name="dialog_title">Exit app.</string>
@@ -48,4 +49,6 @@
     <string name="password">Password is not valid</string>
 
     <string name="search">Search</string>
+    <string name="timeout">Response timeout is over</string>
+
 </resources>

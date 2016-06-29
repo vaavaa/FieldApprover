@@ -16,13 +16,12 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
         android:orientation="horizontal"
         android:weightSum="1">
 
         <Spinner
             android:id="@+id/spinner1"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="0.7"
             android:background="@android:drawable/btn_dropdown"
@@ -32,11 +31,8 @@
             android:id="@+id/ok_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="@dimen/_2sdp"
-            android:layout_marginRight="@dimen/_2sdp"
             android:layout_weight="0.3"
-            android:background="@drawable/welcome_box_green"
-            android:gravity="center"
+            android:background="@drawable/welcome_box_white"
             android:text="@string/Go" />
     </LinearLayout>
 
@@ -57,7 +53,7 @@
             android:id="@+id/comment"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.3" />
+            android:layout_weight="0.4" />
     </LinearLayout>
 
     <View

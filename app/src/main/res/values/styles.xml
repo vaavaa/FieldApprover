@@ -29,8 +29,7 @@
     </style>
 
     <style name="Animations.SplashActivity" parent="@android:style/Animation" >
-        <item name="android:windowEnterAnimation">@anim/appear</item>
-        <item name="android:windowExitAnimation">@anim/disappear</item>
+        <item name="android:windowAnimationStyle">@null</item>
     </style>
 
 </resources>

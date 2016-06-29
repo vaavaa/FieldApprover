@@ -1,4 +1,5 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id ="@+id/RL_row"
     android:layout_width="fill_parent"
     android:layout_height="?android:attr/listPreferredItemHeight"
     android:padding="6dip" >
@@ -16,14 +17,16 @@
     <TextView
         android:id="@+id/secondLine"
         android:layout_width="fill_parent"
-        android:layout_height="26dip"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_toRightOf="@id/icon"
-        android:ellipsize="marquee"
+        android:ellipsize="none"
         android:singleLine="true"
         android:text="Description"
-        android:textSize="12sp" />
+        android:textSize="12sp"
+        android:scrollHorizontally="false"
+        />
 
     <TextView
         android:id="@+id/firstLine"
@@ -34,8 +37,9 @@
         android:layout_alignParentTop="true"
         android:layout_alignWithParentIfMissing="true"
         android:layout_toRightOf="@id/icon"
-        android:gravity="center_vertical"
-        android:text="Example application"
+        android:scrollHorizontally="false"
+        android:ellipsize="none"
+        android:text=""
         android:textSize="16sp" />
 
 </RelativeLayout>

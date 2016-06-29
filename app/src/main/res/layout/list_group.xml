@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+android:layout_width="fill_parent"
+    android:id = "@+id/rroot"
+android:layout_height="wrap_content"
+android:background="@color/groupcolor">
+
+
+<!-- title -->
+<TextView
+    android:id="@+id/lblListHeader"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_centerVertical="true"
+    android:layout_marginLeft="@dimen/_20sdp"
+    android:layout_alignBaseline="@+id/item_counter"
+    android:textSize="18sp"
+    android:paddingTop="@dimen/_5sdp"
+    android:paddingBottom="@dimen/_5sdp"
+    />
+
+<!-- counter -->
+<TextView
+    android:id="@+id/item_counter"
+    android:layout_width="36dp"
+    android:layout_height="36dp"
+    android:layout_alignParentRight="true"
+    android:layout_marginRight="8dp"
+    android:layout_marginTop="8dp"
+    android:layout_centerVertical="true"
+    android:background="@drawable/rectangle"
+    android:gravity="center"
+    android:foregroundGravity="center"
+    android:textColor="#FFFFFF"
+    android:textSize="12sp"
+    android:textStyle="bold" />
+
+
+</RelativeLayout>

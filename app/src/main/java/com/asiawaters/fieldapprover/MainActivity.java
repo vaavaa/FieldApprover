@@ -1,11 +1,10 @@
 package com.asiawaters.fieldapprover;
 
-import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -16,16 +15,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.DecelerateInterpolator;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.AbsListView;
+import android.widget.ExpandableListView;
+import android.widget.Toast;
 
+import com.asiawaters.fieldapprover.classes.FAExpandableListAdapter;
 import com.asiawaters.fieldapprover.classes.Model_ListMembers;
 import com.asiawaters.fieldapprover.classes.Model_Person;
+import com.asiawaters.fieldapprover.classes.PinnedHeaderExpListView;
 
 import org.ksoap2.HeaderProperty;
 import org.ksoap2.SoapEnvelope;
@@ -40,21 +37,30 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private Model_Person mp;
-    private TextView selection;
     private Model_ListMembers[] lst;
-    private ListView listView;
-    private IconicAdapter ia;
+    private FAExpandableListAdapter listAdapter;
+    private PinnedHeaderExpListView expListView;
+    private List<String> listDataHeader;
+    private HashMap<String, List<String>> listDataChild;
+    private FieldApprover FA;
+    private AsyncTask AT;
+
     private String WDSLPath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        listView = (ListView) findViewById(R.id.list);
-        mp = ((com.asiawaters.fieldapprover.FieldApprover) this.getApplication()).getPerson();
+
+        FA = ((com.asiawaters.fieldapprover.FieldApprover) getApplication());
+
+        //prepare tool bar
+        mp = FA.getPerson();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -66,22 +72,132 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        WDSLPath = ((com.asiawaters.fieldapprover.FieldApprover) this.getApplication()).getPath_url();
-
-        lst = ((com.asiawaters.fieldapprover.FieldApprover) this.getApplication()).getList_values() ;
-        new LoginTask().execute();
+        WDSLPath = FA.getPath_url();
+        lst = FA.getList_values();
 
 
-        selection = (TextView) findViewById(R.id.selection);
+        // get the listview
+        expListView = (PinnedHeaderExpListView) findViewById(R.id.lvExp);
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        // Listview Group click listener
+        expListView.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
+
             @Override
-            public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
-                ((FieldApprover) getApplication()).setListMembers(lst[position]);
-                startNextActivity();
+            public boolean onGroupClick(ExpandableListView parent, View v,
+                                        int groupPosition, long id) {
+                // Toast.makeText(getApplicationContext(),
+                // "Group Clicked " + listDataHeader.get(groupPosition),
+                // Toast.LENGTH_SHORT).show();
+                return false;
             }
         });
+
+        // Listview Group expanded listener
+        expListView.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
+
+            @Override
+            public void onGroupExpand(int groupPosition) {
+                Toast.makeText(getApplicationContext(),
+                        listDataHeader.get(groupPosition) + " Expanded",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Listview Group collasped listener
+        expListView.setOnGroupCollapseListener(new ExpandableListView.OnGroupCollapseListener() {
+
+            @Override
+            public void onGroupCollapse(int groupPosition) {
+                Toast.makeText(getApplicationContext(),
+                        listDataHeader.get(groupPosition) + " Collapsed",
+                        Toast.LENGTH_SHORT).show();
+
+            }
+        });
+
+        // Listview on child click listener
+        expListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+
+            @Override
+            public boolean onChildClick(ExpandableListView parent, View v,
+                                        int groupPosition, int childPosition, long id) {
+                // TODO Auto-generated method stub
+                Toast.makeText(
+                        getApplicationContext(),
+                        listDataHeader.get(groupPosition)
+                                + " : "
+                                + listDataChild.get(
+                                listDataHeader.get(groupPosition)).get(
+                                childPosition), Toast.LENGTH_SHORT)
+                        .show();
+                FA.setIdGroup(groupPosition);
+                FA.setIdPosition(childPosition);
+                GetNextStep(childPosition);
+                return false;
+            }
+        });
+        if (lst == null) {
+            AT =   new LoginTask().execute();
+        } else {
+            runUpdateView();
+            if (FA.getIdGroup() != -1) {
+                expListView.expandGroup(FA.getIdGroup(), true);
+                if (FA.getIdPosition() != -1)
+                    expListView.setSelectedChild(FA.getIdGroup(), FA.getIdPosition(), true);
+            }
+        }
+    }
+
+    public void prepareListData() {
+        listDataHeader = new ArrayList<String>();
+        listDataChild = new HashMap<String, List<String>>();
+
+        for (int i = 0; i < lst.length; i++) {
+            if (i == 0) listDataHeader.add(lst[i].getTemplate());
+            else {
+                if (!listDataHeader.contains(lst[i].getTemplate()))
+                    listDataHeader.add(lst[i].getTemplate());
+            }
+        }
+        List<String>[] NestedList = new ArrayList[listDataHeader.size()];
+
+        for (int i = 0; i < listDataHeader.size(); i++) {
+            NestedList[i] = new ArrayList<String>();
+            for (int ii = 0; ii < lst.length; ii++) {
+                if (lst[ii].getTemplate().equals(listDataHeader.get(i)))
+                    NestedList[i].add(lst[ii].getTaskName());
+            }
+            listDataChild.put(listDataHeader.get(i), NestedList[i]);
+        }
+
+    }
+
+    public void startLogingActivity() {
+
+        this.finish();
+        Intent intent;
+        intent = new Intent(getApplicationContext(), LoginActivity.class);
+        startActivity(intent);
+    }
+
+    public void runUpdateView() {
+        FA.setList_values(lst);
+        // preparing list data
+        prepareListData();
+        listAdapter = new FAExpandableListAdapter(getBaseContext(), listDataHeader, listDataChild);
+        // setting list adapter
+        expListView.setAdapter(listAdapter);
+
+        View h = LayoutInflater.from(this).inflate(R.layout.list_group, (ViewGroup) findViewById(R.id.rroot), false);
+        expListView.setPinnedHeaderView(h);
+        expListView.setOnScrollListener((AbsListView.OnScrollListener) listAdapter);
+        expListView.setDividerHeight(0);
+
+    }
+
+    public void GetNextStep(int position) {
+        FA.setListMembers(lst[position]);
+        startNextActivity();
     }
 
     @Override
@@ -133,16 +249,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void closeApp() {
-        finish();
-        Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.addCategory(Intent.CATEGORY_HOME);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
+        if (lst != null) {
+            finish();
+            Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.addCategory(Intent.CATEGORY_HOME);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        } else startLogingActivity();
     }
 
     public void sortList(int order) {
         Collections.sort(Arrays.asList(lst), new Sorter(order));
-        ia.notifyDataSetChanged();
     }
 
     static class Sorter implements Comparator<Model_ListMembers> {
@@ -167,29 +284,6 @@ public class MainActivity extends AppCompatActivity {
         closeApp();
     }
 
-    public Dialog openDialog() {
-        final Dialog dialog = new Dialog(this); // Context, this, etc.
-        dialog.setContentView(R.layout.exit_dialog);
-        dialog.setTitle(R.string.dialog_title);
-        Button btnok = (Button) dialog.findViewById(R.id.dialog_ok);
-        btnok.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
-        Button btnCancel = (Button) dialog.findViewById(R.id.dialog_cancel);
-        btnCancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-            }
-        });
-        dialog.show();
-
-        return dialog;
-    }
-
     public void startNextActivity() {
         this.finish();
         Intent intent = new Intent(getApplicationContext(), DetailsActivity.class);
@@ -200,6 +294,7 @@ public class MainActivity extends AppCompatActivity {
 
         String NAMESPACE = "Mobile";
         String URL = WDSLPath;
+        int timeout = FA.getTimeOut();
 
         boolean result = false;
         final String SOAP_ACTION = "Mobile/MobilePortType/GetStatusRequest";
@@ -216,8 +311,9 @@ public class MainActivity extends AppCompatActivity {
         envelope.setOutputSoapObject(request);
         System.out.println(request);
 
-        HttpTransportSE androidHttpTransport = new HttpTransportSE(URL);
+        HttpTransportSE androidHttpTransport = new HttpTransportSE(URL, timeout);
         androidHttpTransport.debug = true;
+
 
 //        ArrayList headerProperty = new ArrayList();
 //        headerProperty.add(new HeaderProperty("Authorization", "Basic " +
@@ -274,8 +370,9 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 listMembers.setGuidTask(pii.getProperty(4).toString());
-                listMembers.setActive(Boolean.valueOf(pii.getProperty(5).toString()));
-
+                listMembers.setActive(!Boolean.valueOf(pii.getProperty(5).toString()));
+                listMembers.setTemplate(pii.getProperty("Template").toString());
+                listMembers.setActiveBP(Boolean.valueOf(pii.getProperty("ActiveBP").toString()));
                 lms[i] = listMembers;
             }
         }
@@ -283,101 +380,51 @@ public class MainActivity extends AppCompatActivity {
         return lms;
     }
 
-
-    private class LoginTask extends AsyncTask<Void, Void, Void> {
+    private class LoginTask extends AsyncTask<Void, Void, Boolean> {
 
         private final ProgressDialog dialog = new ProgressDialog(
                 MainActivity.this);
 
-        protected void onPreExecute() {
 
+        protected void onPreExecute() {
             this.dialog.setMessage(getBaseContext().getResources().getString(R.string.LoggingIn));
             this.dialog.show();
+            this.dialog.setOnCancelListener(new DialogInterface.OnCancelListener(){
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    AT.cancel(true);
+                    closeApp();
+                }
+            });
+
 
         }
 
 
-        protected Void doInBackground(final Void... unused) {
+        protected Boolean doInBackground(final Void... unused) {
 
             boolean auth = doLogin("", "", mp.getPerson_guid());
             System.out.println(auth);
 
-            return null;// don't interact with the ui!
+            return auth;// don't interact with the ui!
         }
 
 
-        protected void onPostExecute(Void result) {
+        protected void onPostExecute(Boolean result) {
 
 
             if (this.dialog.isShowing()) {
                 this.dialog.dismiss();
-                if (lst != null) {
-                    ((com.asiawaters.fieldapprover.FieldApprover) getApplication()).setList_values(lst);
-                    ia = new IconicAdapter(lst);
-                    sortList(1);
-                    listView.setAdapter(ia);
-                }
             }
-        }
-
-    }
-
-
-    class IconicAdapter extends ArrayAdapter<Model_ListMembers> {
-
-        private int mLastPosition;
-
-        IconicAdapter(Model_ListMembers[] lls) {
-            super(MainActivity.this, R.layout.list_row, lls);
-        }
-
-        class ViewHolder {
-            TextView firstLine;
-            TextView secondLine;
-            ImageView icon;
-        }
-
-        public View getView(int position, View convertView,
-                            ViewGroup parent) {
-
-            ViewHolder viewHolder;
-            if (convertView == null) {
-
-
-                LayoutInflater inflater = getLayoutInflater();
-                convertView = inflater.inflate(R.layout.list_row, parent, false);
-
-                viewHolder = new ViewHolder();
-                viewHolder.firstLine = (TextView) convertView.findViewById(R.id.firstLine);
-                viewHolder.secondLine = (TextView) convertView.findViewById(R.id.secondLine);
-                viewHolder.icon = (ImageView) convertView.findViewById(R.id.icon);
-                convertView.setTag(viewHolder);
-            } else {
-                viewHolder = (ViewHolder) convertView.getTag();
+            if (!result) {
+                Toast.makeText(getBaseContext(), R.string.timeout, Toast.LENGTH_SHORT).show();
+                startLogingActivity();
+            } else if (lst != null) {
+                runUpdateView();
             }
 
-            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy' 'HH:mm");
-            viewHolder.firstLine.setText(lst[position].getTaskName() + " " + "#" + lst[position].getNumberOfTask());
-            viewHolder.secondLine.setText("Date: " + sdf.format(lst[position].getAppointmentDateOfTask()) +
-                    "  Upto: " + sdf.format(lst[position].getTargetDatesForTheTask()));
-            viewHolder.icon.setImageResource(R.drawable.ic_action_pospone);
-            if (lst[position].isActive()) viewHolder.firstLine.setTypeface(null, Typeface.BOLD);
-            else viewHolder.firstLine.setTypeface(null, Typeface.NORMAL);
-            float initialTranslation = (mLastPosition <= position ? 500f : -500f);
 
-            convertView.setTranslationY(initialTranslation);
-            convertView.animate()
-                    .setInterpolator(new DecelerateInterpolator(1.0f))
-                    .translationY(0f)
-                    .setDuration(100l)
-                    .setListener(null);
-            // Keep track of the last position we loaded
-            mLastPosition = position;
-
-
-            return (convertView);
         }
-
 
     }
 }

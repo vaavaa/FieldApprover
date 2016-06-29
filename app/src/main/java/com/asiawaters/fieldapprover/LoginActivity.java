@@ -19,18 +19,19 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.asiawaters.fieldapprover.classes.DBController;
 import com.asiawaters.fieldapprover.classes.Model_NetState;
 import com.asiawaters.fieldapprover.classes.Model_Person;
 import com.asiawaters.fieldapprover.classes.NetListener;
 
 import org.ksoap2.HeaderProperty;
 import org.ksoap2.SoapEnvelope;
+import org.ksoap2.SoapFault12;
 import org.ksoap2.serialization.SoapObject;
 import org.ksoap2.serialization.SoapSerializationEnvelope;
 import org.ksoap2.transport.HttpTransportSE;
 
 import java.net.SocketException;
-import java.util.ArrayList;
 
 
 public class LoginActivity extends Activity {
@@ -43,14 +44,23 @@ public class LoginActivity extends Activity {
     private Model_NetState model_netState;
     private NetListener mnetListener;
     private String WDSLPath;
-
+    // Database Helper
+    private DBController db;
+    private com.asiawaters.fieldapprover.FieldApprover FA;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        FA = ((com.asiawaters.fieldapprover.FieldApprover) getApplication());
+
+        db = new DBController(this);
+        db.openDB();
+        FA.setDb(db);
+
         // Set up the login form.
-        WDSLPath = ((com.asiawaters.fieldapprover.FieldApprover) this.getApplication()).getPath_url();
+        WDSLPath = FA.getPath_url();
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -72,7 +82,8 @@ public class LoginActivity extends Activity {
                         if ((((TextView) findViewById(R.id.password)).getText() != null)) {
                             if (isPasswordValid(((TextView) findViewById(R.id.password)).getText().toString())) {
                                 new LoginTask().execute();
-                            } else Toast.makeText(LoginActivity.this, R.string.password, Toast.LENGTH_SHORT).show();
+                            } else
+                                Toast.makeText(LoginActivity.this, R.string.password, Toast.LENGTH_SHORT).show();
                         } else
                             Toast.makeText(LoginActivity.this, R.string.password, Toast.LENGTH_SHORT).show();
                     } else
@@ -82,8 +93,17 @@ public class LoginActivity extends Activity {
             }
         });
 
-        model_netState = ((FieldApprover) getApplication()).getModel_netState();
-        mnetListener = ((FieldApprover) getApplication()).getMnetListener();
+        String[] credentials = db.getCredentials();
+
+        if (credentials[0] != null) {
+            if (credentials[0].length() > 0) {
+                ((TextView) findViewById(R.id.email)).setText(credentials[0].toString());
+                ((TextView) findViewById(R.id.password)).setText(credentials[1].toString());
+            }
+        }
+
+        model_netState = FA.getModel_netState();
+        mnetListener = FA.getMnetListener();
         RunStatListener();
     }
 
@@ -129,14 +149,15 @@ public class LoginActivity extends Activity {
         }
     }
 
-    private boolean doLogin() {
+    private String doLogin() {
         String NAMESPACE = "Mobile";
+        int timeout = FA.getTimeOut();
 
-        boolean result = false;
+        String result = "false";
         final String SOAP_ACTION = "Mobile";
         final String METHOD_NAME = "Autorization";
         SoapObject request = new SoapObject(NAMESPACE, METHOD_NAME);
-        request.addProperty("Login", "Саликов А.К.");
+        request.addProperty("Login", ((TextView) findViewById(R.id.email)).getText().toString());
         SoapSerializationEnvelope envelope = new SoapSerializationEnvelope(SoapEnvelope.VER12);
         envelope.implicitTypes = true;
         envelope.dotNet = false;
@@ -144,7 +165,7 @@ public class LoginActivity extends Activity {
         envelope.setOutputSoapObject(request);
         System.out.println(request);
 
-        HttpTransportSE androidHttpTransport = new HttpTransportSE(WDSLPath);
+        HttpTransportSE androidHttpTransport = new HttpTransportSE(WDSLPath, timeout);
         androidHttpTransport.debug = true;
 
 //        ArrayList headerProperty = new ArrayList();
@@ -170,22 +191,24 @@ public class LoginActivity extends Activity {
                 person.setPerson_organisation(response.getProperty("Organization").toString());
                 person.setEmail(response.getProperty("email").toString());
                 person.setPerson_position(response.getProperty("Position").toString());
-                ((FieldApprover) this.getApplication()).setPerson(person);
-                result = true;
+                FA.setPerson(person);
+                result = "true";
             }
 
         } catch (SocketException ex) {
             Log.e("Error : ", "Error on soapPrimitiveData() " + ex.getMessage());
             ex.printStackTrace();
+            result = ex.getMessage();
         } catch (Exception e) {
             Log.e("Error : ", "Error on soapPrimitiveData() " + e.getMessage());
             e.printStackTrace();
+            result = e.getMessage();
         }
         return result;
 
     }
 
-    private class LoginTask extends AsyncTask<Void, Void, Boolean> {
+    private class LoginTask extends AsyncTask<Void, Void, String> {
 
         private final ProgressDialog dialog = new ProgressDialog(LoginActivity.this);
 
@@ -194,19 +217,27 @@ public class LoginActivity extends Activity {
             this.dialog.show();
         }
 
-        protected Boolean doInBackground(final Void... unused) {
+        protected String doInBackground(final Void... unused) {
 
-            boolean auth = doLogin();
+            String auth = doLogin();
             return auth;// doesn't interact with the ui!
         }
 
-        protected void onPostExecute(Boolean result) {
+        protected void onPostExecute(String result) {
             if (this.dialog.isShowing()) {
                 this.dialog.dismiss();
             }
-            if (result) startNextActivity();
-            else {
-                Toast.makeText(getBaseContext(), R.string.ServerIsNotResponding, Toast.LENGTH_SHORT).show();
+            if (result != null) {
+                if (result.equals("true")) {
+                    db.setCredentials(((TextView) findViewById(R.id.email)).getText().toString(),
+                            ((TextView) findViewById(R.id.password)).getText().toString());
+                    startNextActivity();
+                } else {
+                    if (result.indexOf("Пользователь не найден") > 0)
+                        Toast.makeText(getBaseContext(), R.string.UserNotFind, Toast.LENGTH_SHORT).show();
+                    else
+                        Toast.makeText(getBaseContext(), R.string.ServerIsNotResponding, Toast.LENGTH_SHORT).show();
+                }
             }
 
         }
