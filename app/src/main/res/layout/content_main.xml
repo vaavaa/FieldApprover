@@ -4,16 +4,36 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/_1sdp"
-    android:paddingLeft="@dimen/_4sdp"
+    android:orientation="vertical"
+    android:paddingBottom="2dp"
+    android:paddingLeft="2dp"
     android:paddingRight="2dp"
     android:paddingTop="2dp"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.asiawaters.fieldapprover.MainActivity"
-    tools:showIn="@layout/activity_main"
-    android:orientation="vertical">
-    <com.asiawaters.fieldapprover.classes.PinnedHeaderExpListView
+    tools:showIn="@layout/activity_main">
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/search_row"
+        android:layout_width="fill_parent"
+        android:layout_height="60dp"
+        android:padding="4dp">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:background="@drawable/ic_action_search"
+            android:paddingLeft="16dp" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingLeft="72dp" />
+    </RelativeLayout>
+
+    <ExpandableListView
         android:id="@+id/lvExp"
-        android:layout_height="match_parent"
-        android:layout_width="match_parent"/>
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 </LinearLayout>

@@ -19,6 +19,9 @@ android {
         repositories {
             maven { url 'https://oss.sonatype.org/content/repositories/ksoap2-android-releases' }
         }
+        repositories {
+            jcenter()
+        }
     }
 }
 
@@ -31,4 +34,5 @@ dependencies {
     compile 'com.google.code.ksoap2-android:ksoap2-android:3.6.1'
     compile 'com.google.android.gms:play-services-appindexing:8.1.0'
     compile 'de.codecrafters.tableview:tableview:2.1.0'
+    compile 'com.github.aakira:expandable-layout:1.5.1@aar'
 }

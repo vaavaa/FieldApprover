@@ -14,7 +14,9 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,6 +25,7 @@ import com.asiawaters.fieldapprover.classes.DBController;
 import com.asiawaters.fieldapprover.classes.Model_NetState;
 import com.asiawaters.fieldapprover.classes.Model_Person;
 import com.asiawaters.fieldapprover.classes.NetListener;
+import com.github.aakira.expandablelayout.ExpandableRelativeLayout;
 
 import org.ksoap2.HeaderProperty;
 import org.ksoap2.SoapEnvelope;
@@ -44,6 +47,9 @@ public class LoginActivity extends Activity {
     private Model_NetState model_netState;
     private NetListener mnetListener;
     private String WDSLPath;
+
+    private ExpandableRelativeLayout mExpandLayout;
+
     // Database Helper
     private DBController db;
     private com.asiawaters.fieldapprover.FieldApprover FA;
@@ -101,6 +107,22 @@ public class LoginActivity extends Activity {
                 ((TextView) findViewById(R.id.password)).setText(credentials[1].toString());
             }
         }
+
+        mExpandLayout
+                = (ExpandableRelativeLayout) findViewById(R.id.expandableLayout);
+
+        Button mSettingsButton = (Button) findViewById(R.id.showSettings);
+        mSettingsButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //Hide Keyboard
+                InputMethodManager imm = (InputMethodManager)getSystemService(getBaseContext().INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+
+                if (!mExpandLayout.isExpanded()) mExpandLayout.expand();
+                else mExpandLayout.collapse();
+            }
+        });
 
         model_netState = FA.getModel_netState();
         mnetListener = FA.getMnetListener();
@@ -229,8 +251,11 @@ public class LoginActivity extends Activity {
             }
             if (result != null) {
                 if (result.equals("true")) {
-                    db.setCredentials(((TextView) findViewById(R.id.email)).getText().toString(),
-                            ((TextView) findViewById(R.id.password)).getText().toString());
+                    if (((CheckBox) findViewById(R.id.chSave)).isChecked())
+                        db.setCredentials(((TextView) findViewById(R.id.email)).getText().toString(),
+                                ((TextView) findViewById(R.id.password)).getText().toString());
+                    else db.setCredentials("", "");
+
                     startNextActivity();
                 } else {
                     if (result.indexOf("Пользователь не найден") > 0)

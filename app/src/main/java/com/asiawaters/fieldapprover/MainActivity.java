@@ -22,7 +22,6 @@ import android.widget.Toast;
 import com.asiawaters.fieldapprover.classes.FAExpandableListAdapter;
 import com.asiawaters.fieldapprover.classes.Model_ListMembers;
 import com.asiawaters.fieldapprover.classes.Model_Person;
-import com.asiawaters.fieldapprover.classes.PinnedHeaderExpListView;
 
 import org.ksoap2.HeaderProperty;
 import org.ksoap2.SoapEnvelope;
@@ -44,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private Model_Person mp;
     private Model_ListMembers[] lst;
     private FAExpandableListAdapter listAdapter;
-    private PinnedHeaderExpListView expListView;
+    private ExpandableListView expListView;
     private List<String> listDataHeader;
     private HashMap<String, List<String>> listDataChild;
     private FieldApprover FA;
@@ -77,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         // get the listview
-        expListView = (PinnedHeaderExpListView) findViewById(R.id.lvExp);
+        expListView = (ExpandableListView) findViewById(R.id.lvExp);
 
         // Listview Group click listener
         expListView.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
@@ -97,9 +96,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onGroupExpand(int groupPosition) {
-                Toast.makeText(getApplicationContext(),
-                        listDataHeader.get(groupPosition) + " Expanded",
-                        Toast.LENGTH_SHORT).show();
+
             }
         });
 
@@ -108,9 +105,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onGroupCollapse(int groupPosition) {
-                Toast.makeText(getApplicationContext(),
-                        listDataHeader.get(groupPosition) + " Collapsed",
-                        Toast.LENGTH_SHORT).show();
+
 
             }
         });
@@ -121,15 +116,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onChildClick(ExpandableListView parent, View v,
                                         int groupPosition, int childPosition, long id) {
-                // TODO Auto-generated method stub
-                Toast.makeText(
-                        getApplicationContext(),
-                        listDataHeader.get(groupPosition)
-                                + " : "
-                                + listDataChild.get(
-                                listDataHeader.get(groupPosition)).get(
-                                childPosition), Toast.LENGTH_SHORT)
-                        .show();
                 FA.setIdGroup(groupPosition);
                 FA.setIdPosition(childPosition);
                 GetNextStep(childPosition);
@@ -187,12 +173,6 @@ public class MainActivity extends AppCompatActivity {
         listAdapter = new FAExpandableListAdapter(getBaseContext(), listDataHeader, listDataChild);
         // setting list adapter
         expListView.setAdapter(listAdapter);
-
-        View h = LayoutInflater.from(this).inflate(R.layout.list_group, (ViewGroup) findViewById(R.id.rroot), false);
-        expListView.setPinnedHeaderView(h);
-        expListView.setOnScrollListener((AbsListView.OnScrollListener) listAdapter);
-        expListView.setDividerHeight(0);
-
     }
 
     public void GetNextStep(int position) {
@@ -205,24 +185,6 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         SearchManager searchManager = (SearchManager)
                 getSystemService(Context.SEARCH_SERVICE);
-        MenuItem searchMenuItem = menu.findItem(R.id.search);
-        // SearchView searchView = (SearchView) searchMenuItem.getActionView();
-
-        // searchView.setSearchableInfo(searchManager.
-        //        getSearchableInfo(getComponentName()));
-        // searchView.setSubmitButtonEnabled(true);
-        // searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-//            @Override
-//            public boolean onQueryTextSubmit(String query) {
-//                return false;
-//            }
-//
-//            @Override
-//            public boolean onQueryTextChange(String newText) {
-//                ia.getFilter().filter(newText);
-//                return true;
-//            }
-//        });
         return true;
     }
 

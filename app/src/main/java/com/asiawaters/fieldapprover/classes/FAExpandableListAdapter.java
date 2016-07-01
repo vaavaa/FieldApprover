@@ -22,7 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 
-public class FAExpandableListAdapter extends BaseExpandableListAdapter implements AbsListView.OnScrollListener {
+public class FAExpandableListAdapter extends BaseExpandableListAdapter {
 
     private Context _context;
     private List<String> _listDataHeader; // header titles
@@ -140,7 +140,6 @@ public class FAExpandableListAdapter extends BaseExpandableListAdapter implement
 
         TextView lblListHeader = (TextView) convertView
                 .findViewById(R.id.lblListHeader);
-        lblListHeader.setTypeface(null, Typeface.BOLD);
         lblListHeader.setText(headerTitle);
 
         TextView lblcount = (TextView) convertView.findViewById(R.id.item_counter);
@@ -160,34 +159,4 @@ public class FAExpandableListAdapter extends BaseExpandableListAdapter implement
         return true;
     }
 
-    /**
-     * размытие/пропадание хэдера
-     */
-    public void configurePinnedHeader(View v, int position, int alpha) {
-        TextView header = (TextView) v;
-        final String title = (String) getGroup(position);
-
-        header.setText(title);
-        if (alpha == 255) {
-            header.setBackgroundColor(Color.WHITE);
-            header.setTextColor(Color.BLACK);
-        } else {
-            header.setBackgroundColor(Color.argb(alpha,
-                    Color.red(Color.WHITE),
-                    Color.green(Color.WHITE),
-                    Color.blue(Color.WHITE)));
-            header.setTextColor(Color.argb(alpha,
-                    Color.red(Color.BLACK),
-                    Color.green(Color.BLACK),
-                    Color.blue(Color.BLACK)));
-        }
-    }
-
-    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-        if (view instanceof PinnedHeaderExpListView) {
-            ((PinnedHeaderExpListView) view).configureHeaderView(firstVisibleItem);
-        }
-
-    }
-    public void onScrollStateChanged(AbsListView view, int scrollState) {}
 }
