@@ -1,6 +1,5 @@
 package com.asiawaters.fieldapprover;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.v4.content.ContextCompat;
@@ -9,6 +8,9 @@ import android.os.AsyncTask;
 
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -22,6 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.asiawaters.fieldapprover.classes.DBController;
+import com.asiawaters.fieldapprover.classes.DatePickerFragment;
 import com.asiawaters.fieldapprover.classes.Model_NetState;
 import com.asiawaters.fieldapprover.classes.Model_Person;
 import com.asiawaters.fieldapprover.classes.NetListener;
@@ -35,9 +38,14 @@ import org.ksoap2.serialization.SoapSerializationEnvelope;
 import org.ksoap2.transport.HttpTransportSE;
 
 import java.net.SocketException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 
-public class LoginActivity extends Activity {
+public class LoginActivity extends AppCompatActivity {
 
     private Model_Person person = null;
 
@@ -47,6 +55,8 @@ public class LoginActivity extends Activity {
     private Model_NetState model_netState;
     private NetListener mnetListener;
     private String WDSLPath;
+    private DatePickerFragment newFragment;
+    private View clickedView;
 
     private ExpandableRelativeLayout mExpandLayout;
 
@@ -72,6 +82,9 @@ public class LoginActivity extends Activity {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
                 if (id == R.id.login || id == EditorInfo.IME_NULL) {
+                    EditText et = (EditText) findViewById(R.id.URLPath);
+                    if (et.getText().toString().length() > 0)
+                        FA.setPath_url(et.getText().toString());
                     new LoginTask().execute();
                     return true;
                 }
@@ -87,6 +100,8 @@ public class LoginActivity extends Activity {
                     if (isLoginValid(((TextView) findViewById(R.id.email)).getText().toString())) {
                         if ((((TextView) findViewById(R.id.password)).getText() != null)) {
                             if (isPasswordValid(((TextView) findViewById(R.id.password)).getText().toString())) {
+                                FA.setUser(((TextView) findViewById(R.id.email)).getText().toString());
+                                FA.setPassword(((TextView) findViewById(R.id.password)).getText().toString());
                                 new LoginTask().execute();
                             } else
                                 Toast.makeText(LoginActivity.this, R.string.password, Toast.LENGTH_SHORT).show();
@@ -116,7 +131,7 @@ public class LoginActivity extends Activity {
             @Override
             public void onClick(View view) {
                 //Hide Keyboard
-                InputMethodManager imm = (InputMethodManager)getSystemService(getBaseContext().INPUT_METHOD_SERVICE);
+                InputMethodManager imm = (InputMethodManager) getSystemService(getBaseContext().INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
 
                 if (!mExpandLayout.isExpanded()) mExpandLayout.expand();
@@ -126,6 +141,22 @@ public class LoginActivity extends Activity {
 
         model_netState = FA.getModel_netState();
         mnetListener = FA.getMnetListener();
+
+        EditText et;
+        et = (EditText) findViewById(R.id.URLPath);
+        et.setText(FA.getPath_url());
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+        Calendar c = Calendar.getInstance();
+        FA.setDateFrom(new Date(c.getTimeInMillis()));
+        et = (EditText) findViewById(R.id.DataFrom);
+        et.setText(sdf.format(FA.getDateFrom()));
+
+        EditText et1;
+        c.add(Calendar.DATE, -50);
+        FA.setDateTo(new Date(c.getTimeInMillis()));
+        et1 = (EditText) findViewById(R.id.DateTo);
+        et1.setText(sdf.format(FA.getDateTo()));
         RunStatListener();
     }
 
@@ -134,6 +165,67 @@ public class LoginActivity extends Activity {
         this.finish();
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         startActivity(intent);
+    }
+
+    public void runDatePickerCompliting() {
+        Date Result = newFragment.getResultDate();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+        EditText et = (EditText) findViewById(R.id.DataFrom);
+        switch (clickedView.getId()) {
+            case R.id.dtaPiker:
+                et = (EditText) findViewById(R.id.DataFrom);
+                break;
+            case R.id.dtaPiker1:
+                et = (EditText) findViewById(R.id.DateTo);
+                break;
+        }
+        et.setText(sdf.format(Result));
+        IsDateCorrect();
+    }
+
+    public boolean IsDateCorrect() {
+        boolean result = false;
+        Date from;
+        Date to;
+        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+        EditText et = (EditText) findViewById(R.id.DataFrom);
+        if (et.getText().length() > 0) {
+            try {
+                from = sdf.parse(et.getText().toString());
+                FA.setDateFrom(from);
+                et = (EditText) findViewById(R.id.DateTo);
+                if (et.getText().length() > 0) {
+                    try {
+                        to = sdf.parse(et.getText().toString());
+                        FA.setDateTo(to);
+                        findViewById(R.id.email_sign_in_button).setEnabled(true);
+                    } catch (ParseException ex) {
+                        findViewById(R.id.email_sign_in_button).setEnabled(false);
+                        Toast.makeText(LoginActivity.this, R.string.WrongDate, Toast.LENGTH_SHORT).show();
+                    }
+                }
+            } catch (ParseException ex) {
+                findViewById(R.id.email_sign_in_button).setEnabled(false);
+                Toast.makeText(LoginActivity.this, R.string.WrongDate, Toast.LENGTH_SHORT).show();
+            }
+        }
+        return result;
+    }
+
+    public void showDatePickerDialog(View v) {
+        newFragment = new DatePickerFragment();
+        clickedView = v;
+        switch (clickedView.getId()) {
+            case R.id.dtaPiker:
+                newFragment.setInitialDate(FA.getDateFrom());
+                break;
+            case R.id.dtaPiker1:
+                newFragment.setInitialDate(FA.getDateTo());
+                break;
+        }
+
+        newFragment.show(getSupportFragmentManager(), "datePicker");
+
     }
 
     public void CheckState() {
@@ -162,6 +254,11 @@ public class LoginActivity extends Activity {
         return password.length() > 0;
     }
 
+    private String getStringResourceByName(String aString) {
+        String packageName = getPackageName();
+        int resId = getResources().getIdentifier(aString, "string", packageName);
+        return getString(resId);
+    }
 
     public void RunStatListener() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
@@ -180,6 +277,7 @@ public class LoginActivity extends Activity {
         final String METHOD_NAME = "Autorization";
         SoapObject request = new SoapObject(NAMESPACE, METHOD_NAME);
         request.addProperty("Login", ((TextView) findViewById(R.id.email)).getText().toString());
+
         SoapSerializationEnvelope envelope = new SoapSerializationEnvelope(SoapEnvelope.VER12);
         envelope.implicitTypes = true;
         envelope.dotNet = false;
@@ -190,17 +288,16 @@ public class LoginActivity extends Activity {
         HttpTransportSE androidHttpTransport = new HttpTransportSE(WDSLPath, timeout);
         androidHttpTransport.debug = true;
 
-//        ArrayList headerProperty = new ArrayList();
-//        headerProperty.add(new HeaderProperty("Authorization", "Basic " +
-//                org.kobjects.base64.Base64.encode(("aw" + ":" + "123").getBytes())));
+        ArrayList headerProperty = new ArrayList();
+        headerProperty.add(new HeaderProperty("Authorization", "Basic " +
+                org.kobjects.base64.Base64.encode((FA.getUser() + ":" + FA.getPassword()).getBytes())));
 
 
         try {
-            androidHttpTransport.call(SOAP_ACTION, envelope);//, headerProperty);
+            androidHttpTransport.call(SOAP_ACTION, envelope, headerProperty);
             Log.d("dump Request: ", androidHttpTransport.requestDump);
             Log.d("dump response: ", androidHttpTransport.responseDump);
             SoapObject response = (SoapObject) envelope.getResponse();
-            Log.i("myApp", response.toString());
             System.out.println("response" + response);
 
             if (response.getProperty("GUIDUser").toString().length() > 0) {
@@ -226,74 +323,74 @@ public class LoginActivity extends Activity {
             e.printStackTrace();
             result = e.getMessage();
         }
-        return result;
-
-    }
-
-    private class LoginTask extends AsyncTask<Void, Void, String> {
-
-        private final ProgressDialog dialog = new ProgressDialog(LoginActivity.this);
-
-        protected void onPreExecute() {
-            this.dialog.setMessage(getBaseContext().getResources().getString(R.string.LoggingIn));
-            this.dialog.show();
+            return result;
         }
 
-        protected String doInBackground(final Void... unused) {
 
-            String auth = doLogin();
-            return auth;// doesn't interact with the ui!
-        }
+        private class LoginTask extends AsyncTask<Void, Void, String> {
 
-        protected void onPostExecute(String result) {
-            if (this.dialog.isShowing()) {
-                this.dialog.dismiss();
-            }
-            if (result != null) {
-                if (result.equals("true")) {
-                    if (((CheckBox) findViewById(R.id.chSave)).isChecked())
-                        db.setCredentials(((TextView) findViewById(R.id.email)).getText().toString(),
-                                ((TextView) findViewById(R.id.password)).getText().toString());
-                    else db.setCredentials("", "");
+            private final ProgressDialog dialog = new ProgressDialog(LoginActivity.this);
 
-                    startNextActivity();
-                } else {
-                    if (result.indexOf("Пользователь не найден") > 0)
-                        Toast.makeText(getBaseContext(), R.string.UserNotFind, Toast.LENGTH_SHORT).show();
-                    else
-                        Toast.makeText(getBaseContext(), R.string.ServerIsNotResponding, Toast.LENGTH_SHORT).show();
-                }
+            protected void onPreExecute() {
+                this.dialog.setMessage(getBaseContext().getResources().getString(R.string.LoggingIn));
+                this.dialog.show();
             }
 
-        }
+            protected String doInBackground(final Void... unused) {
 
-    }
+                String auth = doLogin();
+                return auth;// doesn't interact with the ui!
+            }
 
-    private class CheckTask extends AsyncTask<Void, Void, Boolean> {
-
-        protected void onPreExecute() {
-        }
-
-        protected void onProgressUpdate(Void... progress) {
-            CheckState();
-        }
-
-        protected Boolean doInBackground(final Void... unused) {
-            do {
-                try {
-                    Thread.sleep(2000);
-                    publishProgress();
-                } catch (InterruptedException Ex) {
+            protected void onPostExecute(String result) {
+                if (this.dialog.isShowing()) {
+                    this.dialog.dismiss();
                 }
-            } while (!this.isCancelled());
-            return true;
+                if (result != null) {
+                    if (result.equals("true")) {
+                        if (((CheckBox) findViewById(R.id.chSave)).isChecked())
+                            db.setCredentials(((TextView) findViewById(R.id.email)).getText().toString(),
+                                    ((TextView) findViewById(R.id.password)).getText().toString());
+                        else db.setCredentials("", "");
+
+                        startNextActivity();
+                    } else {
+                        if (result.indexOf("Пользователь не найден") > 0)
+                            Toast.makeText(getBaseContext(), R.string.UserNotFind, Toast.LENGTH_SHORT).show();
+                        else
+                            Toast.makeText(getBaseContext(), getStringResourceByName("ServerIsNotResponding") + " "+ result, Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+            }
+
         }
 
-        protected void onPostExecute() {
-        }
+        private class CheckTask extends AsyncTask<Void, Void, Boolean> {
 
+            protected void onPreExecute() {
+            }
+
+            protected void onProgressUpdate(Void... progress) {
+                CheckState();
+            }
+
+            protected Boolean doInBackground(final Void... unused) {
+                do {
+                    try {
+                        Thread.sleep(2000);
+                        publishProgress();
+                    } catch (InterruptedException Ex) {
+                    }
+                } while (!this.isCancelled());
+                return true;
+            }
+
+            protected void onPostExecute() {
+            }
+
+        }
     }
-}
 
 
 

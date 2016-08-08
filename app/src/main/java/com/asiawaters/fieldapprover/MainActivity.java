@@ -9,19 +9,24 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
+import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.Toast;
 
 import com.asiawaters.fieldapprover.classes.FAExpandableListAdapter;
 import com.asiawaters.fieldapprover.classes.Model_ListMembers;
 import com.asiawaters.fieldapprover.classes.Model_Person;
+import com.asiawaters.fieldapprover.classes.PinnedHeaderExpListView;
 
 import org.ksoap2.HeaderProperty;
 import org.ksoap2.SoapEnvelope;
@@ -37,13 +42,17 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     private Model_Person mp;
     private Model_ListMembers[] lst;
     private FAExpandableListAdapter listAdapter;
-    private ExpandableListView expListView;
+    private PinnedHeaderExpListView expListView;
     private List<String> listDataHeader;
     private HashMap<String, List<String>> listDataChild;
     private FieldApprover FA;
@@ -76,7 +85,13 @@ public class MainActivity extends AppCompatActivity {
 
 
         // get the listview
-        expListView = (ExpandableListView) findViewById(R.id.lvExp);
+        expListView = (PinnedHeaderExpListView) findViewById(R.id.lvExp);
+
+//        expListView.setGroupIndicator(null);
+//        View h = LayoutInflater.from(this).inflate(R.layout.list_group, (ViewGroup) findViewById(R.id.root), false);
+//        expListView.setPinnedHeaderView(h);
+//        expListView.setDividerHeight(0);
+
 
         // Listview Group click listener
         expListView.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
@@ -110,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
         // Listview on child click listener
         expListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
 
@@ -118,28 +134,97 @@ public class MainActivity extends AppCompatActivity {
                                         int groupPosition, int childPosition, long id) {
                 FA.setIdGroup(groupPosition);
                 FA.setIdPosition(childPosition);
-                GetNextStep(childPosition);
+                GetNextStep(groupPosition, childPosition);
                 return false;
             }
         });
         if (lst == null) {
-            AT =   new LoginTask().execute();
+            AT = new LoginTask().execute();
         } else {
-            runUpdateView();
-            if (FA.getIdGroup() != -1) {
-                expListView.expandGroup(FA.getIdGroup(), true);
-                if (FA.getIdPosition() != -1)
-                    expListView.setSelectedChild(FA.getIdGroup(), FA.getIdPosition(), true);
+            if (FA.getUpdateList()) {
+                AT = new LoginTask().execute();
+            } else {
+                FA.setUpdateList(false);
+                runUpdateView();
+                if (FA.getIdGroup() != -1) {
+                    expListView.expandGroup(FA.getIdGroup(), true);
+                    if (FA.getIdPosition() != -1)
+                        expListView.setSelectedChild(FA.getIdGroup(), FA.getIdPosition(), true);
+                }
             }
         }
     }
 
+    public void searchVoid(View v) {
+        //Hide Keyboard
+        InputMethodManager imm = (InputMethodManager) getSystemService(getBaseContext().INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+        if (listAdapter != null) {
+            EditText set = (EditText) findViewById(R.id.search);
+            if (set.getText().toString().length() > 0)
+                listAdapter.getFilter().filter(set.getText().toString());
+            else listAdapter.getFilter().filter("");
+        }
+    }
+
+    public void allShow(View v) {
+        v.setSelected(true);
+        findViewById(R.id.IV3).setSelected(false);
+        if (lst != null) {
+            prepareListData();
+            listAdapter = new FAExpandableListAdapter(getBaseContext(), listDataHeader, listDataChild);
+            // setting list adapter
+            expListView.setAdapter(listAdapter);
+            expListView.setOnScrollListener((AbsListView.OnScrollListener) listAdapter);
+        }
+
+    }
+
+    public void actionNeed(View v) {
+        v.setSelected(true);
+        findViewById(R.id.IV2).setSelected(false);
+        if (lst != null) {
+            prepareListData_();
+            listAdapter = new FAExpandableListAdapter(getBaseContext(), listDataHeader, listDataChild);
+            // setting list adapter
+            expListView.setAdapter(listAdapter);
+            expListView.setOnScrollListener((AbsListView.OnScrollListener) listAdapter);
+        }
+
+    }
+
+
+    public HashMap<String, List<String>> sortMap(HashMap<String, List<String>> unsortMap, int order) {
+        List<HashMap.Entry<String, List<String>>> list = new LinkedList<HashMap.Entry<String, List<String>>>(unsortMap.entrySet());
+        final int f_order = order;
+        // put sorted list into map again
+        HashMap<String, List<String>> sortedMap = new LinkedHashMap<String, List<String>>();
+        for (Iterator<Map.Entry<String, List<String>>> it = list.iterator(); it.hasNext(); ) {
+            Map.Entry<String, List<String>> entry = it.next();
+
+            List<String> lstr = entry.getValue();
+            Collections.sort(lstr, new Comparator<String>() {
+                @SuppressWarnings("unchecked")
+                public int compare(String s1, String s2) {
+                    if (f_order > 0) return s1.compareTo(s2);
+                    else return s2.compareTo(s1);
+                }
+            });
+            entry.setValue(lstr);
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
+        return sortedMap;
+    }
+
+
     public void prepareListData() {
+        if (lst == null) return;
         listDataHeader = new ArrayList<String>();
         listDataChild = new HashMap<String, List<String>>();
 
         for (int i = 0; i < lst.length; i++) {
-            if (i == 0) listDataHeader.add(lst[i].getTemplate());
+            if (i == 0)
+                listDataHeader.add(lst[i].getTemplate());
             else {
                 if (!listDataHeader.contains(lst[i].getTemplate()))
                     listDataHeader.add(lst[i].getTemplate());
@@ -151,9 +236,36 @@ public class MainActivity extends AppCompatActivity {
             NestedList[i] = new ArrayList<String>();
             for (int ii = 0; ii < lst.length; ii++) {
                 if (lst[ii].getTemplate().equals(listDataHeader.get(i)))
-                    NestedList[i].add(lst[ii].getTaskName());
+                    NestedList[i].add(lst[ii].getGuidTask());
             }
             listDataChild.put(listDataHeader.get(i), NestedList[i]);
+        }
+
+    }
+
+    public void prepareListData_() {
+        if (lst == null) return;
+        listDataHeader = new ArrayList<String>();
+        listDataChild = new HashMap<String, List<String>>();
+
+        for (int i = 0; i < lst.length; i++) {
+            if (lst[i].isActive()) {
+                if (!listDataHeader.contains(lst[i].getTemplate()))
+                    listDataHeader.add(lst[i].getTemplate());
+            }
+        }
+
+        List<String>[] NestedList = new ArrayList[listDataHeader.size()];
+
+        for (int i = 0; i < listDataHeader.size(); i++) {
+            NestedList[i] = new ArrayList<String>();
+            for (int ii = 0; ii < lst.length; ii++) {
+                if (lst[ii].isActive()) {
+                    if (lst[ii].getTemplate().equals(listDataHeader.get(i)))
+                        NestedList[i].add(lst[ii].getGuidTask());
+                }
+                listDataChild.put(listDataHeader.get(i), NestedList[i]);
+            }
         }
 
     }
@@ -168,23 +280,28 @@ public class MainActivity extends AppCompatActivity {
 
     public void runUpdateView() {
         FA.setList_values(lst);
-        // preparing list data
-        prepareListData();
-        listAdapter = new FAExpandableListAdapter(getBaseContext(), listDataHeader, listDataChild);
-        // setting list adapter
-        expListView.setAdapter(listAdapter);
+        actionNeed(findViewById(R.id.IV3));
     }
 
-    public void GetNextStep(int position) {
-        FA.setListMembers(lst[position]);
+    public void GetNextStep(int groupPosition, int position) {
+
+        String GUIDObject = listDataChild.get(listDataHeader.get(groupPosition)).get(position);
+        FA.setListMembers(findMember(GUIDObject));
         startNextActivity();
+    }
+
+    private Model_ListMembers findMember(String codeIsIn) {
+        for (Model_ListMembers Model : lst) {
+            if (Model.getGuidTask().equals(codeIsIn)) {
+                return Model;
+            }
+        }
+        return null;
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        SearchManager searchManager = (SearchManager)
-                getSystemService(Context.SEARCH_SERVICE);
         return true;
     }
 
@@ -221,23 +338,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void sortList(int order) {
-        Collections.sort(Arrays.asList(lst), new Sorter(order));
-    }
-
-    static class Sorter implements Comparator<Model_ListMembers> {
-        int order = -1;
-
-        Sorter(int order) {
-            this.order = order;
+        if (listAdapter != null) {
+            listDataChild = sortMap(listDataChild, order);
+            listAdapter.notifyDataSetChanged();
         }
-
-        public int compare(Model_ListMembers ob1, Model_ListMembers ob2) {
-            int result = 0;
-            if (order > 0) result = Boolean.compare(ob2.isActive(), ob1.isActive());
-            else result = Boolean.compare(ob1.isActive(), ob2.isActive());
-            return result;
-        }
-
     }
 
 
@@ -263,8 +367,10 @@ public class MainActivity extends AppCompatActivity {
         final String METHOD_NAME = "PoluchitSpisokZadachZaPeriod";
         SoapObject request = new SoapObject(NAMESPACE, METHOD_NAME);
         request.addProperty("GuidUser", guid);
-        request.addProperty("BeginDate", "2016-01-01");
-        request.addProperty("EndDate", "2016-09-09");
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        request.addProperty("BeginDate", sdf.format(FA.getDateTo()));
+        request.addProperty("EndDate", sdf.format(FA.getDateFrom()));
 
         SoapSerializationEnvelope envelope = new SoapSerializationEnvelope(SoapEnvelope.VER12);
         envelope.implicitTypes = true;
@@ -277,27 +383,28 @@ public class MainActivity extends AppCompatActivity {
         androidHttpTransport.debug = true;
 
 
-//        ArrayList headerProperty = new ArrayList();
-//        headerProperty.add(new HeaderProperty("Authorization", "Basic " +
-//                org.kobjects.base64.Base64.encode(("aw" + ":" + "123").getBytes())));
+        ArrayList headerProperty = new ArrayList();
+        headerProperty.add(new HeaderProperty("Authorization", "Basic " +
+                org.kobjects.base64.Base64.encode((FA.getUser() + ":" + FA.getPassword()).getBytes())));
 
 
         try {
-            androidHttpTransport.call(SOAP_ACTION, envelope); //, headerProperty);
+            androidHttpTransport.call(SOAP_ACTION, envelope, headerProperty);
             Log.d("dump Request: ", androidHttpTransport.requestDump);
             Log.d("dump response: ", androidHttpTransport.responseDump);
             SoapObject response = (SoapObject) envelope.getResponse();
             Log.i("myApp", response.toString());
             System.out.println("response" + response);
+            if (response.getPropertyCount() > 0) {
+                if (response.getProperty("List").toString().length() > 0) {
+                    Model_ListMembers[] lms = RetrieveFromSoap(response);
+                    if (lms != null) {
+                        lst = lms;
+                        result = true;
+                    } else return false;
 
-            if (response.getProperty("List").toString().length() > 0) {
-                Model_ListMembers[] lms = RetrieveFromSoap(response);
-                if (lms != null) {
-                    lst = lms;
-                    result = true;
                 } else return false;
-
-            } else return false;
+            } else result = true;
 
         } catch (SocketException ex) {
             Log.e("Error : ", "Error on soapPrimitiveData() " + ex.getMessage());
@@ -351,7 +458,7 @@ public class MainActivity extends AppCompatActivity {
         protected void onPreExecute() {
             this.dialog.setMessage(getBaseContext().getResources().getString(R.string.LoggingIn));
             this.dialog.show();
-            this.dialog.setOnCancelListener(new DialogInterface.OnCancelListener(){
+            this.dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                 @Override
                 public void onCancel(DialogInterface dialog) {
                     AT.cancel(true);
@@ -382,10 +489,10 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getBaseContext(), R.string.timeout, Toast.LENGTH_SHORT).show();
                 startLogingActivity();
             } else if (lst != null) {
+                FA.setUpdateList(false);
                 runUpdateView();
+                sortList(-1);
             }
-
-
         }
 
     }

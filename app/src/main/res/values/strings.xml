@@ -19,6 +19,7 @@
     <string name="Internet_is_not_available">Internet is not available</string>
     <string name="Connection_is_switched_off">Connection is switched off. Pls. switch on the connection</string>
     <string name="LoggingIn">Logging in...</string>
+    <string name="Updating">Updating...</string>
     <string name="ServerIsNotResponding">Server didn\'t send a respond. Try ones again.</string>
     <string name="UserNotFind">Such user\'s name is not find.</string>
 
@@ -58,5 +59,6 @@
     <string name="dateTo">Date to</string>
     <string name="URL">Server path</string>
 
+    <string name="WrongDate">Date is not valid.  Date format is dd.MM.yyyy</string>
 
 </resources>

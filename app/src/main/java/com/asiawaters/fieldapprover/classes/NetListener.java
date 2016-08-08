@@ -26,12 +26,12 @@ public class NetListener extends AsyncTask<Model_NetState, Model_NetState, Boole
     protected Boolean doInBackground(Model_NetState... parameter) {
         Model_NetState context_plus = parameter[0];
         do {
-            context_plus.setConnected(Network_Helper.isConnectedbyPing(context_plus.getUrl()));
+            context_plus.setConnected(Network_Helper.doCheck());
             context_plus.setOnline(Network_Helper.isOnline(context_plus.getContext()));
 
             publishProgress(context_plus);
             try {
-                Thread.sleep(500);
+                Thread.sleep(2500);
             } catch (InterruptedException Ex) {
             }
 

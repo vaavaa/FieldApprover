@@ -81,7 +81,6 @@ public class SplashActivity extends Activity {
     @Override
     public void onResume() {
         super.onResume();
-        startMainActivity();
     }
 
     public void startMainActivity() {

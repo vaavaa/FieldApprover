@@ -10,7 +10,7 @@
         android:layout_height="fill_parent"
         android:layout_alignParentBottom="true"
         android:layout_alignParentTop="true"
-        android:paddingLeft="16dp"
+        android:paddingLeft="6dp"
         android:src="@drawable/ic_action_done_all" />
 
     <TextView
@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:paddingLeft="72dp"
+        android:paddingLeft="48dp"
         android:ellipsize="none"
         android:singleLine="true"
         android:text="Description"
@@ -36,7 +36,7 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
         android:layout_alignWithParentIfMissing="true"
-        android:paddingLeft="72dp"
+        android:paddingLeft="48dp"
         android:scrollHorizontally="false"
         android:paddingTop="8dp"
         android:ellipsize="none"

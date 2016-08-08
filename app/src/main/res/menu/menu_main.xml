@@ -14,24 +14,4 @@
         android:title="@string/desc"
         android:icon="@drawable/ic_sort_desc"
         app:showAsAction="always" />
-    <item
-        android:id="@+id/Sort"
-        android:orderInCategory="120"
-        android:title="@string/sort"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/Sort1"
-        android:orderInCategory="130"
-        android:title="@string/sort1"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/Sort0"
-        android:orderInCategory="140"
-        android:title="@string/sort01"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/Sort01"
-        android:orderInCategory="150"
-        android:title="@string/sort01"
-        app:showAsAction="never" />
 </menu>

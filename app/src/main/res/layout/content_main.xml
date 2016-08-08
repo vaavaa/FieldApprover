@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -20,19 +21,41 @@
         android:padding="4dp">
 
         <ImageView
+            android:id="@+id/IV3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:background="@drawable/icon_selected1"
+            android:layout_alignParentEnd="true"
+            android:paddingRight="16dp"
+            android:onClick="actionNeed" />
+        <ImageView
+            android:id="@+id/IV2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:background="@drawable/icon_selected"
+            android:layout_toStartOf="@id/IV3"
+            android:paddingRight="6dp"
+            android:onClick="allShow"/>
+        <ImageView
+            android:id="@+id/IV1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:background="@drawable/ic_action_search"
-            android:paddingLeft="16dp" />
+            android:layout_toStartOf="@id/IV2"
+            android:paddingRight="6dp"
+            android:onClick="searchVoid"/>
 
         <EditText
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingLeft="72dp" />
+            android:layout_height="48dp"
+            android:layout_marginEnd="106dp"
+            android:id="@+id/search"/>
     </RelativeLayout>
 
-    <ExpandableListView
+    <com.asiawaters.fieldapprover.classes.PinnedHeaderExpListView
         android:id="@+id/lvExp"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

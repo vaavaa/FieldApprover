@@ -102,26 +102,59 @@
                 android:checked="true"
                 android:text="@string/SaveLogin" />
 
-                <EditText
-                    android:id="@+id/DataFrom"
-                    android:layout_width="match_parent"
-                    android:layout_height="40dp"
-                    android:layout_below="@id/chSave"
-                    android:hint="@string/dateFrom" />
+            <ImageView
+                android:id="@+id/dtaPiker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/chSave"
+                android:background="@drawable/date_picker"
+                android:onClick="showDatePickerDialog"
+                android:layout_alignRight="@+id/URLPath"
+                android:paddingRight="8dp"/>
 
-                <EditText
-                    android:id="@+id/DateTo"
-                    android:layout_width="match_parent"
-                    android:layout_height="40dp"
-                    android:layout_below="@id/DataFrom"
-                    android:hint="@string/dateTo" />
+            <EditText
+                android:id="@+id/DataFrom"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_below="@id/chSave"
+                android:hint="@string/dateFrom"
+                android:inputType="date"
+                android:clickable="false"
+                android:cursorVisible="false"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:layout_marginRight="48dp"/>
 
-                <EditText
-                    android:id="@+id/URLPath"
-                    android:layout_width="match_parent"
-                    android:layout_height="40dp"
-                    android:layout_below="@id/DateTo"
-                    android:hint="@string/URL" />
+            <ImageView
+                android:id="@+id/dtaPiker1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/DataFrom"
+                android:background="@drawable/date_picker"
+                android:onClick="showDatePickerDialog"
+                android:layout_alignRight="@+id/URLPath"
+                android:paddingRight="8dp" />
+
+            <EditText
+                android:id="@+id/DateTo"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_below="@id/DataFrom"
+                android:hint="@string/dateTo"
+                android:inputType="date"
+                android:clickable="false"
+                android:cursorVisible="false"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:layout_marginRight="48dp"/>
+
+            <EditText
+                android:id="@+id/URLPath"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_below="@id/DateTo"
+                android:hint="@string/URL"
+                android:inputType="textUri" />
 
 
         </com.github.aakira.expandablelayout.ExpandableRelativeLayout>

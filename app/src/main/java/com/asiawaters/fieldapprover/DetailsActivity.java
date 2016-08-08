@@ -31,7 +31,9 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import org.kobjects.base64.Base64;
 import org.ksoap2.HeaderProperty;
 import org.ksoap2.SoapEnvelope;
+import org.ksoap2.serialization.PropertyInfo;
 import org.ksoap2.serialization.SoapObject;
+import org.ksoap2.serialization.SoapPrimitive;
 import org.ksoap2.serialization.SoapSerializationEnvelope;
 import org.ksoap2.transport.HttpTransportSE;
 
@@ -54,7 +56,8 @@ public class DetailsActivity extends AppCompatActivity {
     private String WDSLPath;
     String[] items = new String[]{""};
     Spinner dropdown;
-
+    private FieldApprover FA;
+    private Model_ListMembers[] lst;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +65,7 @@ public class DetailsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_details);
         DATA_TO_SHOW[0] = getBaseContext().getResources().getString(R.string.TitleColumn1);
         DATA_TO_SHOW[1] = getBaseContext().getResources().getString(R.string.TitleColumn2);
+        FA = ((com.asiawaters.fieldapprover.FieldApprover) getApplication());
 
         WDSLPath = ((com.asiawaters.fieldapprover.FieldApprover) this.getApplication()).getPath_url();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -84,23 +88,30 @@ public class DetailsActivity extends AppCompatActivity {
         Button ok_btn = (Button) findViewById(R.id.ok_btn);
         ok_btn.setOnClickListener(mStatListener);
 
+        lst = FA.getList_values();
+
         dropdown = (Spinner) findViewById(R.id.spinner1);
 
 
-        mlm = ((FieldApprover) this.getApplication()).getListMember();
+        mlm = FA.getListMember();
         new LoginTask().execute();
     }
 
+    private Model_ListMembers findMember(String codeIsIn) {
+        for (Model_ListMembers Model : lst) {
+            if (Model.getGuidTask().equals(codeIsIn)) {
+                return Model;
+            }
+        }
+        return null;
+    }
     // Create an anonymous implementation of OnClickListener
     private View.OnClickListener mStatListener = new View.OnClickListener() {
         public void onClick(View v) {
             switch (v.getId()) {
                 case R.id.ok_btn:
                     if (!dropdown.getItemAtPosition(dropdown.getSelectedItemPosition()).toString().equals("")) {
-                        if (doAction("", "")) {
-                            Toast.makeText(DetailsActivity.this, R.string.Done, Toast.LENGTH_SHORT).show();
-                            LockUI(true);
-                        }
+                        new UpdateTask().execute();
                     }
                     break;
                 default:
@@ -131,13 +142,13 @@ public class DetailsActivity extends AppCompatActivity {
         HttpTransportSE androidHttpTransport = new HttpTransportSE(URL);
         androidHttpTransport.debug = true;
 
-//        ArrayList headerProperty = new ArrayList();
-//        headerProperty.add(new HeaderProperty("Authorization", "Basic " +
-//                Base64.encode(("aw" + ":" + "123").getBytes())));
+        ArrayList headerProperty = new ArrayList();
+        headerProperty.add(new HeaderProperty("Authorization", "Basic " +
+                org.kobjects.base64.Base64.encode((FA.getUser() + ":" + FA.getPassword()).getBytes())));
 
 
         try {
-            androidHttpTransport.call(SOAP_ACTION, envelope);//, headerProperty);
+            androidHttpTransport.call(SOAP_ACTION, envelope, headerProperty);
             Log.d("dump Request: ", androidHttpTransport.requestDump);
             Log.d("dump response: ", androidHttpTransport.responseDump);
             SoapObject response = (SoapObject) envelope.getResponse();
@@ -171,40 +182,37 @@ public class DetailsActivity extends AppCompatActivity {
         SoapObject request = new SoapObject(NAMESPACE, METHOD_NAME);
         request.addProperty(NAMESPACE, "GUIDTask", mlm.getGuidTask());
         request.addProperty(NAMESPACE, "Status", dropdown.getItemAtPosition(dropdown.getSelectedItemPosition()).toString());
-        request.addProperty(NAMESPACE, "ExtraOptions", "");
-        SoapObject list = (SoapObject) request.addProperty(NAMESPACE1, "List", "");
+
+        SoapObject ExtraOptions = new SoapObject(NAMESPACE, "ExtraOptions");
+        SoapObject list = new SoapObject(NAMESPACE1, "List");
         list.addProperty(NAMESPACE1, "Key", "Комментарий");
         list.addProperty(NAMESPACE1, "Value", ((EditText) findViewById(R.id.comment)).getText().toString());
         list.addProperty(NAMESPACE1, "Table", "");
         list.addProperty(NAMESPACE1, "NumberOfLine", "0");
+
+        ExtraOptions.addSoapObject(list);
+        request.addSoapObject(ExtraOptions);
 
         SoapSerializationEnvelope envelope = new SoapSerializationEnvelope(SoapEnvelope.VER12);
         envelope.implicitTypes = true;
         envelope.dotNet = false;
 
         envelope.setOutputSoapObject(request);
-        System.out.println(request);
 
         HttpTransportSE androidHttpTransport = new HttpTransportSE(URL);
         androidHttpTransport.debug = true;
 
-//        ArrayList headerProperty = new ArrayList();
-//        headerProperty.add(new HeaderProperty("Authorization", "Basic " +
-//                Base64.encode(("aw" + ":" + "123").getBytes())));
+        ArrayList headerProperty = new ArrayList();
+        headerProperty.add(new HeaderProperty("Authorization", "Basic " +
+                org.kobjects.base64.Base64.encode((FA.getUser() + ":" + FA.getPassword()).getBytes())));
 
 
         try {
-            androidHttpTransport.call(SOAP_ACTION, envelope); //headerProperty);
+            androidHttpTransport.call(SOAP_ACTION, envelope, headerProperty);
             Log.d("dump Request: ", androidHttpTransport.requestDump);
             Log.d("dump response: ", androidHttpTransport.responseDump);
-            SoapObject response = (SoapObject) envelope.getResponse();
-            Log.i("myApp", response.toString());
-            System.out.println("response" + response);
-
-            if (response.getProperty("List").toString().length() > 0) {
-                taskMembers = RetrieveFromSoap(response);
-                result = true;
-            }
+            SoapPrimitive response = (SoapPrimitive) envelope.getResponse();
+            if (androidHttpTransport.responseDump.toString().contains("true")) result = true;
 
         } catch (SocketException ex) {
             Log.e("Error : ", "Error on soapPrimitiveData() " + ex.getMessage());
@@ -326,7 +334,38 @@ public class DetailsActivity extends AppCompatActivity {
         return taskMembers;
     }
 
+    private class UpdateTask extends AsyncTask<Void, Void, Boolean> {
 
+        private final ProgressDialog dialog = new ProgressDialog(
+                DetailsActivity.this);
+
+        protected void onPreExecute() {
+
+            this.dialog.setMessage(getBaseContext().getResources().getString(R.string.Updating));
+            this.dialog.show();
+
+        }
+
+
+        protected Boolean doInBackground(final Void... unused) {
+
+            boolean auth = doAction("", "");
+            return auth;
+        }
+
+
+        protected void onPostExecute(Boolean result) {
+            if (this.dialog.isShowing()) {
+                this.dialog.dismiss();
+                if (result) {
+                    FA.setUpdateList(true);
+                    Toast.makeText(DetailsActivity.this, R.string.Done, Toast.LENGTH_SHORT).show();
+                    LockUI(true);
+                }
+            }
+        }
+
+    }
     private class LoginTask extends AsyncTask<Void, Void, Void> {
 
         private final ProgressDialog dialog = new ProgressDialog(
@@ -354,7 +393,9 @@ public class DetailsActivity extends AppCompatActivity {
                 this.dialog.dismiss();
                 if (taskMembers != null) {
                     if (taskMembers.getmTaskListFields() != null) {
-                        LockUI(false);
+                        if (mlm.isActive())LockUI(false);
+                        else LockUI(true);
+
                         ArrayAdapter<String> adapter = new ArrayAdapter<String>(getBaseContext(), android.R.layout.simple_spinner_dropdown_item, items);
                         dropdown.setAdapter(adapter);
                         fillCommoninfo();
